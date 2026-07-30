@@ -176,6 +176,11 @@
       <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4 19h16"/></svg>
       <span>Export as JSON</span>
     </button>
+    <button type="button" class="menu-item hidden" id="day-share-voice-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5v4M8.5 21.5h7"/></svg>
+      <span>Save voice recording(s)</span>
+    </button>
+    <p class="settings-note hidden" id="day-share-voice-hint">Neither the PNG nor the PDF can play audio, so this day's recording(s) also come along as separate file(s) when you save the image above — or grab them on their own here.</p>
   </div>
 </template>
 
@@ -263,13 +268,13 @@
     </header>
 
     <p class="card-detail-section-label">Full backup</p>
-    <p class="settings-note">Everything, including every photo — for safekeeping or moving devices.</p>
+    <p class="settings-note">Everything, including every photo and voice recording — for safekeeping or moving devices.</p>
     <div class="form-actions">
       <button type="button" class="text-btn primary" id="data-export-all-btn">Export everything</button>
     </div>
 
     <p class="card-detail-section-label" style="margin-top:20px;">Export a collection</p>
-    <p class="settings-note">Pick a date range to export as a printable PDF booklet or a JSON file.</p>
+    <p class="settings-note">Pick a date range to export as a printable PDF booklet or a JSON file. A PDF page can't play audio, so any voice recordings in range come along as separate files — grab them with the third button below.</p>
     <div class="field-row">
       <label class="field">
         <span>From</span>
@@ -284,6 +289,10 @@
       <button type="button" class="text-btn secondary" id="data-range-pdf-btn">PDF booklet</button>
       <button type="button" class="text-btn secondary" id="data-range-json-btn">JSON</button>
     </div>
+    <div class="form-actions">
+      <button type="button" class="text-btn secondary" id="data-range-voice-btn">Voice recordings in range</button>
+    </div>
+    <p class="import-message hidden" id="data-range-voice-result"></p>
 
     <p class="card-detail-section-label" style="margin-top:20px;">Free up space</p>
     <p class="settings-note" id="data-storage-estimate"></p>
@@ -333,6 +342,7 @@
       <section>
         <h3>Sharing a day</h3>
         <p>Open any day and tap the share icon to save it as an image, export it as a JSON file, or print it — choosing "Save as PDF" in the print dialog turns it (or a whole date range, from Export &amp; manage data) into a PDF booklet.</p>
+        <p>A PNG and a PDF page can't actually play audio, so a day with a voice memo also hands over the recording itself as a separate file — bundled alongside the image when you save one, or on its own from "Save voice recording(s)".</p>
       </section>
       <section>
         <h3>Your data, your device</h3>

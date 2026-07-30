@@ -12,6 +12,7 @@ export const CHANGELOG = [
       "Creative Daily launches: a daily creativity prompt, a beautiful capture form for whatever you make, and a log to look back through.",
       "Added Voice memo as a seventh way to capture a piece — record right in the app.",
       "Before you've logged anything, today's prompt now stands alone, centered and unboxed — it settles into the usual card once you add your first piece.",
+      "Fixed voice memos disappearing from Share/PDF/PNG exports: since neither format can play audio, the recording now rides along as an actual separate file instead of just a note saying it's missing.",
     ],
   },
 ];

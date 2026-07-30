@@ -7,11 +7,12 @@ import {
   clearImagesInRange,
   getDaysWithEntries,
   getDayNumber,
+  getEntriesForDate,
   todayKey,
 } from "./storage.js";
 import { openSheet } from "./sheet.js";
-import { shareOrDownload, filenameFor } from "./share.js";
-import { exportDayAsImage } from "./canvasExport.js";
+import { shareOrDownload, shareFilesOrDownload, filenameFor } from "./share.js";
+import { exportDayAsImage, collectVoiceFiles } from "./canvasExport.js";
 import { promptSummaryFor } from "./dayDetail.js";
 import { formatDate } from "./util.js";
 import { typeFor } from "./entryTypes.js";
@@ -25,6 +26,13 @@ function formatBytes(n) {
 function formatAudioDuration(seconds) {
   const s = Math.max(0, Math.round(seconds || 0));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+async function collectVoiceFilesForRange(fromKey, toKey) {
+  const days = (await getDaysWithEntries()).filter((d) => d.dateKey >= fromKey && d.dateKey <= toKey);
+  const files = [];
+  for (const day of days) files.push(...(await collectVoiceFiles(day.entries, day.dateKey)));
+  return files;
 }
 
 // Builds a hidden, print-only DOM tree covering every day in [fromKey,
@@ -76,7 +84,7 @@ async function printBooklet(fromKey, toKey) {
       if (entry.type === "voice" && entry.audio) {
         const note = document.createElement("p");
         note.className = "print-entry-text print-entry-audio-note";
-        note.textContent = "🎙 Audio recording — not included in print, only the caption below.";
+        note.textContent = "🎙 Voice recording — a printed page can't play audio; use “Voice recordings” to save it separately.";
         entryEl.appendChild(note);
       }
       if (entry.text) {
@@ -106,12 +114,23 @@ async function printBooklet(fromKey, toKey) {
   setTimeout(cleanup, 60000);
 }
 
-export function openDayShareSheet(dateKey) {
+export async function openDayShareSheet(dateKey) {
   const sheet = openSheet("tpl-day-share");
   const el = sheet.el;
   el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
 
+  const entries = await getEntriesForDate(dateKey);
+  const hasVoice = entries.some((e) => e.type === "voice" && e.audio);
+
+  const voiceBtn = el.querySelector("#day-share-voice-btn");
+  const voiceHint = el.querySelector("#day-share-voice-hint");
+  voiceBtn.classList.toggle("hidden", !hasVoice);
+  voiceHint.classList.toggle("hidden", !hasVoice);
+
   el.querySelector("#day-share-image-btn").addEventListener("click", async () => {
+    // A PNG can't play audio -- when this day has a voice memo, its
+    // recording rides along as an extra file in the same share action
+    // instead of getting silently left out.
     await exportDayAsImage(dateKey);
     sheet.close();
   });
@@ -122,6 +141,11 @@ export function openDayShareSheet(dateKey) {
   el.querySelector("#day-share-json-btn").addEventListener("click", async () => {
     const data = await exportRangeData(dateKey, dateKey);
     await shareOrDownload(filenameFor(`creative-daily-${dateKey}`), JSON.stringify(data, null, 2));
+    sheet.close();
+  });
+  voiceBtn.addEventListener("click", async () => {
+    const files = await collectVoiceFiles(entries, dateKey);
+    if (files.length > 0) await shareFilesOrDownload(files);
     sheet.close();
   });
 }
@@ -158,6 +182,19 @@ export function openDataManagementSheet() {
     if (!fromInput.value || !toInput.value) return;
     const data = await exportRangeData(fromInput.value, toInput.value);
     await shareOrDownload(filenameFor(`creative-daily-collection-${fromInput.value}-to-${toInput.value}`), JSON.stringify(data, null, 2));
+  });
+
+  const rangeVoiceResult = el.querySelector("#data-range-voice-result");
+  el.querySelector("#data-range-voice-btn").addEventListener("click", async () => {
+    if (!fromInput.value || !toInput.value) return;
+    const files = await collectVoiceFilesForRange(fromInput.value, toInput.value);
+    if (files.length === 0) {
+      rangeVoiceResult.textContent = "No voice recordings in that range.";
+      rangeVoiceResult.classList.remove("hidden");
+      return;
+    }
+    rangeVoiceResult.classList.add("hidden");
+    await shareFilesOrDownload(files);
   });
 
   const storageEl = el.querySelector("#data-storage-estimate");

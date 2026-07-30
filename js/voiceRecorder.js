@@ -7,6 +7,21 @@ export function blobToDataUrl(blob) {
   });
 }
 
+// The reverse of blobToDataUrl -- needed to turn a stored recording back
+// into an actual playable/shareable file, since neither the PNG nor the PDF
+// export can embed audio (both are static). fetch() on a data: URI is a
+// synchronous decode under the hood, not a network request.
+export async function dataUrlToBlob(dataUrl) {
+  const res = await fetch(dataUrl);
+  return res.blob();
+}
+
+const EXT_FOR_MIME = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/mpeg": "mp3" };
+
+export function fileExtensionForAudio(blob) {
+  return EXT_FOR_MIME[blob.type] || "webm";
+}
+
 export const RECORDING_SUPPORTED =
   typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 

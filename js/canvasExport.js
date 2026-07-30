@@ -2,7 +2,8 @@ import { getEntriesForDate, getDayNumber } from "./storage.js";
 import { promptSummaryFor } from "./dayDetail.js";
 import { formatPromptDate } from "./util.js";
 import { typeFor } from "./entryTypes.js";
-import { shareImageOrDownload, filenameFor } from "./share.js";
+import { shareFilesOrDownload, filenameFor } from "./share.js";
+import { dataUrlToBlob, fileExtensionForAudio } from "./voiceRecorder.js";
 
 const CANVAS_WIDTH = 1000;
 const PADDING = 56;
@@ -183,8 +184,35 @@ export async function renderDayCanvas(dateKey) {
   return canvas;
 }
 
+// Voice recordings can't be embedded in a PNG or a printed PDF -- both are
+// static -- so instead of silently dropping them, every export path bundles
+// the actual audio file(s) alongside whatever *can* be rendered, as
+// separate files in the same share action (or separate downloads, wherever
+// multi-file share isn't supported).
+export async function collectVoiceFiles(entries, dateKey) {
+  const voiceEntries = entries.filter((e) => e.type === "voice" && e.audio);
+  const files = await Promise.all(
+    voiceEntries.map(async (entry, i) => {
+      const blob = await dataUrlToBlob(entry.audio);
+      const ext = fileExtensionForAudio(blob);
+      const suffix = voiceEntries.length > 1 ? `-${i + 1}` : "";
+      return new File([blob], filenameFor(`creative-daily-${dateKey}-voice${suffix}`, ext), { type: blob.type });
+    })
+  );
+  return files;
+}
+
 export async function exportDayAsImage(dateKey) {
-  const canvas = await renderDayCanvas(dateKey);
+  const [canvas, entries] = await Promise.all([renderDayCanvas(dateKey), getEntriesForDate(dateKey)]);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-  return shareImageOrDownload(filenameFor(`creative-daily-${dateKey}`, "png"), blob);
+  const imageFile = new File([blob], filenameFor(`creative-daily-${dateKey}`, "png"), { type: "image/png" });
+  const voiceFiles = await collectVoiceFiles(entries, dateKey);
+  return shareFilesOrDownload([imageFile, ...voiceFiles]);
+}
+
+export async function exportDayVoiceRecordings(dateKey) {
+  const entries = await getEntriesForDate(dateKey);
+  const voiceFiles = await collectVoiceFiles(entries, dateKey);
+  if (voiceFiles.length === 0) return "none";
+  return shareFilesOrDownload(voiceFiles);
 }
