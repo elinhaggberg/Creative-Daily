@@ -23,7 +23,7 @@ export async function renderHome(root, nav) {
   promptSlot.replaceChildren(buildPromptCard(today, { variant: entries.length === 0 ? "hero" : "card" }));
 
   const entriesEl = root.querySelector("#home-entries");
-  renderEntryNodesInto(entriesEl, entries, refresh);
+  await renderEntryNodesInto(entriesEl, entries, refresh);
 
   root.querySelector("#add-btn").addEventListener("click", () => addEntryForDate(today, refresh));
 

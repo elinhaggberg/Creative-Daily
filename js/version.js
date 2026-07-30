@@ -13,6 +13,11 @@ export const CHANGELOG = [
       "Added Voice memo as a seventh way to capture a piece — record right in the app.",
       "Before you've logged anything, today's prompt now stands alone, centered and unboxed — it settles into the usual card once you add your first piece.",
       "Fixed voice memos disappearing from Share/PDF/PNG exports: since neither format can play audio, the recording now rides along as an actual separate file instead of just a note saying it's missing.",
+      "New app icon.",
+      "Tapping a piece now opens a preview first, with share/edit/delete up top, instead of jumping straight into editing it.",
+      "Poem and Short story now open as a full-screen writing view instead of a compact card.",
+      "Artwork prompts now link to a Google Images search, so you can actually look at the piece.",
+      "Fixed a masonry layout bug where a photo card's height wasn't measured until after it fully loaded, sometimes stacking every following piece into one lopsided column.",
     ],
   },
 ];

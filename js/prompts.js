@@ -124,3 +124,9 @@ export function getPrompt(id) {
 export function youtubeSearchUrl(query) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
+
+// Image search, since the point for an artwork prompt is to actually look
+// at the thing -- a plain web search would mostly surface text about it.
+export function googleImagesSearchUrl(query) {
+  return `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`;
+}

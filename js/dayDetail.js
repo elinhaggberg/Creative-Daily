@@ -1,7 +1,8 @@
 import { getEntriesForDate, getDayNumber, createEmptyEntry, todayKey } from "./storage.js";
-import { promptForDate, getPrompt, PROMPT_CATEGORIES, youtubeSearchUrl } from "./prompts.js";
+import { promptForDate, getPrompt, PROMPT_CATEGORIES, youtubeSearchUrl, googleImagesSearchUrl } from "./prompts.js";
 import { openSheet } from "./sheet.js";
 import { openEntryEditor } from "./entryEditor.js";
+import { openEntryDetail } from "./entryDetail.js";
 import { createEntryNode } from "./entryCard.js";
 import { renderDayEntries } from "./masonry.js";
 import { formatPromptDate, formatDate } from "./util.js";
@@ -59,13 +60,18 @@ export function buildPromptCard(dateKey, { heading = "Today's creative prompt", 
     card.appendChild(meta);
   }
 
-  if (prompt.category === "music") {
+  if (prompt.category === "music" || prompt.category === "artwork") {
     const link = document.createElement("a");
     link.className = isHero ? "prompt-hero-link" : "prompt-card-link";
-    link.href = youtubeSearchUrl(`${prompt.title} ${prompt.meta}`);
+    if (prompt.category === "music") {
+      link.href = youtubeSearchUrl(`${prompt.title} ${prompt.meta}`);
+      link.textContent = "Find it on YouTube ↗";
+    } else {
+      link.href = googleImagesSearchUrl(`${prompt.title} ${prompt.meta}`);
+      link.textContent = "See the artwork ↗";
+    }
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = "Find it on YouTube ↗";
     card.appendChild(link);
   }
 
@@ -87,17 +93,17 @@ export function promptSummaryFor(dateKey) {
 }
 
 // Renders already-fetched entries (masonry) into `container`, wiring each
-// card to open the editor. Split from renderEntriesInto below so callers
-// that already need the entry list for another decision (Home sizing its
-// prompt hero vs. card) don't have to fetch it twice.
-export function renderEntryNodesInto(container, entries, refresh) {
+// card to open its read-only detail preview. Split from renderEntriesInto
+// below so callers that already need the entry list for another decision
+// (Home sizing its prompt hero vs. card) don't have to fetch it twice.
+export async function renderEntryNodesInto(container, entries, refresh) {
   if (entries.length === 0) {
     container.className = "";
     container.replaceChildren();
     return;
   }
-  renderDayEntries(container, entries, (entry) =>
-    createEntryNode(entry, (e) => openEntryEditor({ entry: e, isNew: false, refresh }))
+  await renderDayEntries(container, entries, (entry) =>
+    createEntryNode(entry, (e) => openEntryDetail(e, { refresh }))
   );
 }
 
@@ -105,7 +111,7 @@ export function renderEntryNodesInto(container, entries, refresh) {
 // the Day Detail sheet, which doesn't need the list for anything else.
 export async function renderEntriesInto(container, dateKey, refresh) {
   const entries = await getEntriesForDate(dateKey);
-  renderEntryNodesInto(container, entries, refresh);
+  await renderEntryNodesInto(container, entries, refresh);
   return entries;
 }
 

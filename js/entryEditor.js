@@ -1,41 +1,40 @@
-import { saveEntry, deleteEntry } from "./storage.js";
+import { saveEntry } from "./storage.js";
 import { openSheet } from "./sheet.js";
 import { readAndResizeImage, readAndResizeImages } from "./imageBlob.js";
 import { startRecording, blobToDataUrl, RECORDING_SUPPORTED } from "./voiceRecorder.js";
 import { ENTRY_TYPES, typeFor } from "./entryTypes.js";
-import { autogrow } from "./util.js";
+
+// Poem and Short story open as a full-screen, distraction-free writing view
+// instead of the compact bottom sheet the other types use -- long-form
+// writing wants the whole screen, not a half-height card.
+function isFullscreenType(typeId) {
+  return typeId === "poem" || typeId === "story";
+}
 
 // Opens the capture sheet for a new or existing entry. `entry` already has
 // dateKey/promptId set by the caller (today on Home, a past date from the
-// Calendar or Day Detail's own "+").
+// Calendar or Day Detail's own "+"). Deleting an existing entry happens
+// from its detail preview (entryDetail.js), not here.
 export function openEntryEditor({ entry, isNew, refresh }) {
   const draft = { ...entry, images: [...(entry.images || [])], audio: entry.audio || "", audioDuration: entry.audioDuration || 0 };
 
   const sheet = openSheet("tpl-entry-editor");
   const el = sheet.el;
+  const sheetEl = el.querySelector(".sheet");
   el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
   el.querySelector("#entry-editor-heading").textContent = isNew ? "Add to today" : "Edit";
 
-  const deleteBtn = el.querySelector("#entry-editor-delete-btn");
-  if (isNew) {
-    deleteBtn.classList.add("hidden");
-  } else {
-    deleteBtn.classList.remove("hidden");
-    deleteBtn.addEventListener("click", () => {
-      const confirmSheet = openSheet("tpl-confirm-delete");
-      confirmSheet.el.querySelector(".confirm-message").textContent = "Delete this piece? This can't be undone.";
-      confirmSheet.el.querySelector(".cancel-btn").addEventListener("click", () => confirmSheet.close());
-      confirmSheet.el.querySelector(".confirm-btn").addEventListener("click", async () => {
-        await deleteEntry(draft.id);
-        confirmSheet.close();
-        sheet.close();
-        refresh();
-      });
-    });
-  }
-
   const textInput = el.querySelector("#entry-editor-text");
-  autogrow(textInput);
+  function resizeText() {
+    if (isFullscreenType(draft.type)) {
+      // Fullscreen mode fills the available space via CSS flex instead --
+      // an explicit pixel height here would fight that.
+      textInput.style.height = "";
+      return;
+    }
+    textInput.style.height = "auto";
+    textInput.style.height = `${textInput.scrollHeight}px`;
+  }
 
   const urlField = el.querySelector("#entry-editor-url-field");
   const urlInput = el.querySelector("#entry-editor-url");
@@ -87,6 +86,8 @@ export function openEntryEditor({ entry, isNew, refresh }) {
     renderImagePreview();
     voiceSection.classList.toggle("hidden", type.id !== "voice");
     if (type.id === "voice") renderVoiceState();
+    sheetEl.classList.toggle("entry-editor-fullscreen", isFullscreenType(type.id));
+    resizeText();
   }
 
   const typeRow = el.querySelector("#entry-editor-type-row");
@@ -201,6 +202,7 @@ export function openEntryEditor({ entry, isNew, refresh }) {
   textInput.value = draft.text || "";
   textInput.addEventListener("input", () => {
     draft.text = textInput.value;
+    resizeText();
   });
 
   urlInput.value = draft.url || "";

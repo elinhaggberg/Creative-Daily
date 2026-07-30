@@ -161,6 +161,41 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .sheet-header h2 { flex: 1; font-size: 1.15rem; }
 .search-sheet { min-height: 70dvh; }
 
+/* Full-screen writing view (Poem / Short story) -- the sheet grows to cover
+   the whole viewport and the text field fills whatever's left, instead of
+   staying a half-height card for what's meant to be longer-form writing. */
+.sheet.entry-editor-fullscreen {
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+  padding-top: calc(8px + env(safe-area-inset-top));
+}
+.sheet.entry-editor-fullscreen #entry-editor-text-field {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 10px;
+}
+.sheet.entry-editor-fullscreen #entry-editor-text {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: none;
+  background: transparent;
+  padding: 6px 2px;
+  font-size: 1.3rem;
+  line-height: 1.75;
+}
+.sheet.entry-editor-fullscreen #entry-editor-text:focus { outline: none; }
+
+/* Entry detail preview */
+.entry-detail-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent); }
+.entry-detail-badge .icon { width: 1em; height: 1em; }
+#entry-detail-media { margin: 0 -18px 14px; }
+#entry-detail-media .entry-card-media { max-height: 60vh; }
+#entry-detail-media .entry-card-gallery-grid { grid-template-columns: 1fr 1fr; }
+#entry-detail-body { padding: 0; }
+#entry-detail-body .entry-card-text { font-size: 1.02rem; }
+
 /* Day detail sheet */
 .day-detail-sheet .sheet-header { align-items: flex-start; }
 .day-detail-heading { flex: 1; min-width: 0; }
@@ -431,6 +466,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
   border-radius: 14px;
 }
 :root[data-theme="playful"] .sheet { border-radius: 28px 28px 0 0; }
+:root[data-theme="playful"] .sheet.entry-editor-fullscreen { border-radius: 0; }
 :root[data-theme="playful"] .theme-option,
 :root[data-theme="playful"] .type-chip,
 :root[data-theme="playful"] .day-card,
