@@ -321,6 +321,12 @@ export function openDataManagementSheet() {
   }
   updateClearGate();
 
+  // Reserve the paragraph's height with placeholder text right away --
+  // estimateImageBytes() reads real stored image blobs, and going straight
+  // from an empty <p> to a filled one once that resolves shifts every field
+  // below it down mid-scroll on a real device (fast/empty test data hides
+  // this locally since the read resolves before the sheet even paints).
+  storageEl.textContent = "Checking storage…";
   async function refreshStorageEstimate() {
     const bytes = await estimateImageBytes();
     storageEl.textContent = bytes > 0 ? `About ${formatBytes(bytes)} of images stored on this device.` : "No images stored yet.";

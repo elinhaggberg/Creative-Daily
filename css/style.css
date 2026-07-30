@@ -213,6 +213,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .menu-item:last-child { border-bottom: none; }
 .menu-item .icon { width: 1.1em; height: 1.1em; color: var(--text-dim); flex-shrink: 0; }
 .settings-note { color: var(--text-dim); font-size: 0.85rem; line-height: 1.45; margin: 4px 0 12px; }
+#data-storage-estimate { min-height: calc(0.85rem * 1.45); }
 
 .card-detail-section-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); padding: 0 2px; margin: 0 0 8px; }
 .log-headline-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; }

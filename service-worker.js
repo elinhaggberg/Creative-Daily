@@ -1,4 +1,4 @@
-const CACHE_NAME = "creative-daily-v6";
+const CACHE_NAME = "creative-daily-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
