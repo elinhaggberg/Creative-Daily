@@ -94,6 +94,15 @@ function buildPrintPage(dayNumber, dateKey, entries) {
 // print dialog -- "Save as PDF" in that dialog is what produces the actual
 // file. No PDF library needed, and it works the same on iOS Share Sheet /
 // Android / desktop print-to-PDF.
+//
+// window.print() needs to run synchronously inside the click handler that
+// triggered it -- once real async work (an IndexedDB read, a fetch, even a
+// single microtask hop on some engines) happens first, iOS Safari silently
+// drops the "this came from a user gesture" permission and just never opens
+// the dialog. No error, no dialog, nothing. So every caller here prefetches
+// its data *before* the click (when the sheet opens, or when a date input
+// changes) and this function -- and everything between the click and it --
+// stays fully synchronous.
 function triggerPrint(root) {
   document.body.appendChild(root);
   const cleanup = () => root.remove();
@@ -104,31 +113,40 @@ function triggerPrint(root) {
   setTimeout(cleanup, 60000);
 }
 
-async function printBooklet(fromKey, toKey) {
+async function buildBookletPages(fromKey, toKey) {
   const days = (await getDaysWithEntries()).filter((d) => d.dateKey >= fromKey && d.dateKey <= toKey).reverse();
-
-  const root = document.createElement("div");
-  root.className = "print-booklet";
-
-  const cover = document.createElement("section");
-  cover.className = "print-page print-cover";
-  cover.innerHTML = `<h1>Creative Daily</h1><p>${formatDate(fromKey)} – ${formatDate(toKey)}</p>`;
-  root.appendChild(cover);
-
+  const pages = [];
   for (const day of days) {
     const dayNumber = await getDayNumber(day.dateKey);
-    root.appendChild(buildPrintPage(dayNumber, day.dateKey, day.entries));
+    pages.push(buildPrintPage(dayNumber, day.dateKey, day.entries));
   }
+  return pages;
+}
 
+// Builds the (optional) cover + already-built pages and prints --
+// deliberately takes no async data-fetching of its own so it's safe to call
+// as the very last step of a click handler (see the note on triggerPrint
+// below). The cover page only makes sense once there's a real range/day to
+// title -- a single piece's own PDF skips it.
+function printPages(fromKey, toKey, pages, { withCover = true } = {}) {
+  const root = document.createElement("div");
+  root.className = "print-booklet";
+  if (withCover) {
+    const cover = document.createElement("section");
+    cover.className = "print-page print-cover";
+    cover.innerHTML = `<h1>Creative Daily</h1><p>${formatDate(fromKey)} – ${formatDate(toKey)}</p>`;
+    root.appendChild(cover);
+  }
+  for (const page of pages) root.appendChild(page);
   triggerPrint(root);
 }
 
-async function printSingleEntry(entry, dateKey) {
-  const dayNumber = await getDayNumber(dateKey);
-  const root = document.createElement("div");
-  root.className = "print-booklet";
-  root.appendChild(buildPrintPage(dayNumber, dateKey, [entry]));
-  triggerPrint(root);
+// Fallback path when nothing's been prefetched -- fetches then prints. Only
+// used where a prefetched cache genuinely isn't available; the direct
+// click-to-print paths below avoid this specifically because of the note on
+// triggerPrint.
+async function printBooklet(fromKey, toKey) {
+  printPages(fromKey, toKey, await buildBookletPages(fromKey, toKey));
 }
 
 // Shares/downloads directly when there's only one image (nothing to choose
@@ -147,7 +165,10 @@ export async function openDayShareSheet(dateKey) {
   const el = sheet.el;
   el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
 
-  const entries = await getEntriesForDate(dateKey);
+  // Fetched once up front, before any button can be tapped, so the PDF
+  // button's click handler can call window.print() with zero async gap --
+  // see the note on triggerPrint.
+  const [entries, dayNumber] = await Promise.all([getEntriesForDate(dateKey), getDayNumber(dateKey)]);
   const hasVoice = entries.some((e) => e.type === "voice" && e.audio);
 
   const voiceBtn = el.querySelector("#day-share-voice-btn");
@@ -160,9 +181,9 @@ export async function openDayShareSheet(dateKey) {
     const cards = await buildDayImageCards(dateKey);
     await shareOrPickImages(cards);
   });
-  el.querySelector("#day-share-pdf-btn").addEventListener("click", async () => {
+  el.querySelector("#day-share-pdf-btn").addEventListener("click", () => {
     sheet.close();
-    await printBooklet(dateKey, dateKey);
+    printPages(dateKey, dateKey, [buildPrintPage(dayNumber, dateKey, entries)]);
   });
   el.querySelector("#day-share-json-btn").addEventListener("click", async () => {
     const data = await exportRangeData(dateKey, dateKey);
@@ -179,11 +200,14 @@ export async function openDayShareSheet(dateKey) {
 // Same menu as the day share sheet, scoped to one piece -- reuses the same
 // template, just retitled, since a single entry is really just a day share
 // with one candidate entry.
-export function openEntryShareSheet(entry, dateKey) {
+export async function openEntryShareSheet(entry, dateKey) {
   const sheet = openSheet("tpl-day-share");
   const el = sheet.el;
   el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
   el.querySelector("#share-sheet-title").textContent = "Share this piece";
+
+  // Fetched before any button can be tapped -- see the note on triggerPrint.
+  const dayNumber = await getDayNumber(dateKey);
 
   const hasVoice = entry.type === "voice" && Boolean(entry.audio);
   const voiceBtn = el.querySelector("#day-share-voice-btn");
@@ -195,9 +219,9 @@ export function openEntryShareSheet(entry, dateKey) {
     sheet.close();
     await exportEntryAsImage(entry, dateKey);
   });
-  el.querySelector("#day-share-pdf-btn").addEventListener("click", async () => {
+  el.querySelector("#day-share-pdf-btn").addEventListener("click", () => {
     sheet.close();
-    await printSingleEntry(entry, dateKey);
+    printPages(dateKey, dateKey, [buildPrintPage(dayNumber, dateKey, [entry])], { withCover: false });
   });
   el.querySelector("#day-share-json-btn").addEventListener("click", async () => {
     const data = { type: "creative-daily-entry", version: 1, exportedAt: new Date().toISOString(), entry };
@@ -235,10 +259,36 @@ export function openDataManagementSheet() {
   toInput.value = today;
   fromInput.value = today;
 
+  // The range is picked live via date inputs, so it can't be prefetched
+  // once up front the way a fixed day/entry share sheet can be -- instead,
+  // re-render the booklet pages every time the range actually changes (a
+  // "change" event, not every keystroke) and cache them, so by the time the
+  // PDF button is clicked, printing it is a synchronous cache read. See the
+  // note on triggerPrint for why that gap matters. Falls back to fetching
+  // inline only in the unlikely case a click beats the very first prefetch.
+  let bookletCache = null;
+  async function refreshBookletCache() {
+    if (!fromInput.value || !toInput.value) {
+      bookletCache = null;
+      return;
+    }
+    const from = fromInput.value;
+    const to = toInput.value;
+    const pages = await buildBookletPages(from, to);
+    bookletCache = { from, to, pages };
+  }
+  refreshBookletCache();
+  fromInput.addEventListener("change", refreshBookletCache);
+  toInput.addEventListener("change", refreshBookletCache);
+
   el.querySelector("#data-range-pdf-btn").addEventListener("click", async () => {
     if (!fromInput.value || !toInput.value) return;
     sheet.close();
-    await printBooklet(fromInput.value, toInput.value);
+    if (bookletCache && bookletCache.from === fromInput.value && bookletCache.to === toInput.value) {
+      printPages(bookletCache.from, bookletCache.to, bookletCache.pages);
+    } else {
+      await printBooklet(fromInput.value, toInput.value);
+    }
   });
   el.querySelector("#data-range-json-btn").addEventListener("click", async () => {
     if (!fromInput.value || !toInput.value) return;
