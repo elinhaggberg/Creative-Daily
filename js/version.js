@@ -22,6 +22,7 @@ export const CHANGELOG = [
       "A single piece now has its own Share menu — image, PDF, or JSON — same as a full day.",
       "Redesigned image export: each piece now renders as its own shareable card (1080×1350, Instagram-portrait size) instead of one long stitched screenshot. A day with more than one piece opens a picker to choose which cards to keep, one PNG per piece.",
       "Fixed Save as PDF silently doing nothing on some browsers: it was fetching data after the tap instead of before, and once that gap crossed into real async work, iOS Safari quietly refused to open the print dialog. All PDF exports now prefetch first so printing happens the instant you tap.",
+      "Fixed text overlapping and layout jumping around on longer sheets (like Export & manage data): a flexbox quirk was letting content get squeezed shorter than it needed before the sheet would scroll, instead of just scrolling.",
     ],
   },
 ];
