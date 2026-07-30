@@ -1,4 +1,4 @@
-import { ICON_NOTE, ICON_POEM, ICON_BOOK, ICON_IMAGE, ICON_GALLERY, ICON_LINK } from "./icons.js";
+import { ICON_NOTE, ICON_POEM, ICON_BOOK, ICON_IMAGE, ICON_GALLERY, ICON_LINK, ICON_MIC } from "./icons.js";
 
 export const ENTRY_TYPES = [
   { id: "note", label: "Note", icon: ICON_NOTE, placeholder: "Jot down what you made, or just a short log…", long: false, serif: false },
@@ -7,6 +7,7 @@ export const ENTRY_TYPES = [
   { id: "image", label: "Image", icon: ICON_IMAGE, placeholder: "Caption (optional)…", long: false, serif: false },
   { id: "gallery", label: "Gallery", icon: ICON_GALLERY, placeholder: "Caption (optional)…", long: false, serif: false },
   { id: "link", label: "Link", icon: ICON_LINK, placeholder: "What is this a link to?", long: false, serif: false },
+  { id: "voice", label: "Voice memo", icon: ICON_MIC, placeholder: "Caption (optional)…", long: false, serif: false },
 ];
 
 export function typeFor(id) {

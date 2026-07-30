@@ -8,52 +8,72 @@ import { formatPromptDate, formatDate } from "./util.js";
 import { ICON_PLUS, ICON_SHARE } from "./icons.js";
 import { openDayShareSheet } from "./dataManagement.js";
 
-// Builds the "today's creative prompt" card -- shared by Home (today, always
-// visible) and Day Detail (any past/future day, inside a sheet).
-export function buildPromptCard(dateKey, { heading = "Today's creative prompt" } = {}) {
+// Builds the "today's creative prompt" presentation -- shared by Home
+// (today, always visible) and Day Detail (any past/future day, inside a
+// sheet). Two variants of the same content: "hero" is the bare, centered,
+// literary presentation Home shows before anything's been logged for the
+// day; "card" is the boxed, compact version it settles into once there's at
+// least one piece to sit above (and what Day Detail always uses, since it's
+// already inside a sheet with its own chrome).
+export function buildPromptCard(dateKey, { heading = "Today's creative prompt", variant = "card" } = {}) {
   const prompt = promptForDate(new Date(`${dateKey}T00:00:00`));
   const category = PROMPT_CATEGORIES[prompt.category];
+  const isHero = variant === "hero";
 
   const card = document.createElement("div");
-  card.className = "prompt-card";
+  card.className = isHero ? "prompt-hero" : "prompt-card";
 
-  const head = document.createElement("div");
-  head.className = "prompt-card-head";
-  head.innerHTML = `<p class="prompt-card-heading">${heading}</p><p class="prompt-card-date">${formatPromptDate(dateKey)}</p>`;
-  card.appendChild(head);
+  if (isHero) {
+    const heading_ = document.createElement("p");
+    heading_.className = "prompt-hero-heading";
+    heading_.textContent = heading;
+    card.appendChild(heading_);
+  } else {
+    const head = document.createElement("div");
+    head.className = "prompt-card-head";
+    head.innerHTML = `<p class="prompt-card-heading">${heading}</p><p class="prompt-card-date">${formatPromptDate(dateKey)}</p>`;
+    card.appendChild(head);
+  }
 
   const badge = document.createElement("span");
-  badge.className = "prompt-card-badge";
-  badge.textContent = category.label;
+  badge.className = isHero ? "prompt-hero-category" : "prompt-card-badge";
+  badge.textContent = isHero ? category.label.toUpperCase() : category.label;
   card.appendChild(badge);
 
   const title = document.createElement("p");
-  title.className = "prompt-card-title";
+  title.className = isHero ? "prompt-hero-title" : "prompt-card-title";
   title.textContent = prompt.title || prompt.body;
   card.appendChild(title);
 
   if (prompt.title && prompt.body) {
     const body = document.createElement("p");
-    body.className = "prompt-card-body";
+    body.className = isHero ? "prompt-hero-body" : "prompt-card-body";
     body.textContent = prompt.body;
     card.appendChild(body);
   }
 
   if (prompt.meta) {
     const meta = document.createElement("p");
-    meta.className = "prompt-card-meta";
+    meta.className = isHero ? "prompt-hero-meta" : "prompt-card-meta";
     meta.textContent = prompt.meta;
     card.appendChild(meta);
   }
 
   if (prompt.category === "music") {
     const link = document.createElement("a");
-    link.className = "prompt-card-link";
+    link.className = isHero ? "prompt-hero-link" : "prompt-card-link";
     link.href = youtubeSearchUrl(`${prompt.title} ${prompt.meta}`);
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = "Find it on YouTube ↗";
     card.appendChild(link);
+  }
+
+  if (isHero) {
+    const date = document.createElement("p");
+    date.className = "prompt-hero-date";
+    date.textContent = formatPromptDate(dateKey);
+    card.appendChild(date);
   }
 
   return card;
@@ -66,19 +86,26 @@ export function promptSummaryFor(dateKey) {
   return { prompt, category, headline };
 }
 
-// Renders a day's entries (masonry) into `container`, wiring each card to
-// open the editor. Shared by Home's inline "today" section and the Day
-// Detail sheet.
-export async function renderEntriesInto(container, dateKey, refresh) {
-  const entries = await getEntriesForDate(dateKey);
+// Renders already-fetched entries (masonry) into `container`, wiring each
+// card to open the editor. Split from renderEntriesInto below so callers
+// that already need the entry list for another decision (Home sizing its
+// prompt hero vs. card) don't have to fetch it twice.
+export function renderEntryNodesInto(container, entries, refresh) {
   if (entries.length === 0) {
     container.className = "";
     container.replaceChildren();
-    return entries;
+    return;
   }
   renderDayEntries(container, entries, (entry) =>
     createEntryNode(entry, (e) => openEntryEditor({ entry: e, isNew: false, refresh }))
   );
+}
+
+// Fetches and renders a day's entries (masonry) into `container`. Used by
+// the Day Detail sheet, which doesn't need the list for anything else.
+export async function renderEntriesInto(container, dateKey, refresh) {
+  const entries = await getEntriesForDate(dateKey);
+  renderEntryNodesInto(container, entries, refresh);
   return entries;
 }
 

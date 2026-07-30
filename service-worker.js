@@ -1,4 +1,4 @@
-const CACHE_NAME = "creative-daily-v1";
+const CACHE_NAME = "creative-daily-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./js/db.js",
   "./js/storage.js",
   "./js/imageBlob.js",
+  "./js/voiceRecorder.js",
   "./js/prompts.js",
   "./js/entryTypes.js",
   "./js/theme.js",

@@ -18,8 +18,10 @@ export const PLAYFUL_SWATCHES = [
 
 const THEME_BG = { dark: "#0b0d0f", light: "#f6f7f9", playful: "#f7f0e4" };
 
-// Playful (warm paper, like a sketchbook page) is the default look.
-const DEFAULT_PREF = { mode: "playful", playfulAccent: "lilac" };
+// Playful (warm paper, like a sketchbook page) is the default look, with
+// Midnight (dark purple) as the default accent -- moodier and more
+// "creative practice at night" than the brighter swatches.
+const DEFAULT_PREF = { mode: "playful", playfulAccent: "midnight" };
 
 export function getTheme() {
   return { ...DEFAULT_PREF, ...getThemePref() };

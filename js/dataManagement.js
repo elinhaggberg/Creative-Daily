@@ -22,6 +22,11 @@ function formatBytes(n) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatAudioDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
 // Builds a hidden, print-only DOM tree covering every day in [fromKey,
 // toKey] and triggers the browser's native print dialog -- "Save as PDF" in
 // that dialog is what produces the actual booklet. No PDF library needed,
@@ -58,12 +63,21 @@ async function printBooklet(fromKey, toKey) {
       entryEl.className = "print-entry";
       const typeLabel = document.createElement("p");
       typeLabel.className = "print-entry-type";
-      typeLabel.textContent = typeFor(entry.type).label;
+      typeLabel.textContent =
+        entry.type === "voice" && entry.audio
+          ? `${typeFor(entry.type).label} · ${formatAudioDuration(entry.audioDuration)}`
+          : typeFor(entry.type).label;
       entryEl.appendChild(typeLabel);
       for (const src of entry.images || []) {
         const img = document.createElement("img");
         img.src = src;
         entryEl.appendChild(img);
+      }
+      if (entry.type === "voice" && entry.audio) {
+        const note = document.createElement("p");
+        note.className = "print-entry-text print-entry-audio-note";
+        note.textContent = "🎙 Audio recording — not included in print, only the caption below.";
+        entryEl.appendChild(note);
       }
       if (entry.text) {
         const p = document.createElement("p");
@@ -168,15 +182,15 @@ export function openDataManagementSheet() {
   clearBtn.addEventListener("click", async () => {
     if (!justExportedFull) return;
     const confirmSheet = openSheet("tpl-confirm-delete");
-    confirmSheet.el.querySelector(".confirm-title").textContent = "Clear images?";
+    confirmSheet.el.querySelector(".confirm-title").textContent = "Clear photos & recordings?";
     confirmSheet.el.querySelector(".confirm-message").textContent =
-      `This removes the photos from every entry on or before ${clearFromInput.value}, freeing up space. The entries themselves — text, type, and date — stay in your log. This can't be undone.`;
-    confirmSheet.el.querySelector(".confirm-btn").textContent = "Clear images";
+      `This removes the photos and voice recordings from every entry on or before ${clearFromInput.value}, freeing up space. The entries themselves — text, type, and date — stay in your log. This can't be undone.`;
+    confirmSheet.el.querySelector(".confirm-btn").textContent = "Clear";
     confirmSheet.el.querySelector(".cancel-btn").addEventListener("click", () => confirmSheet.close());
     confirmSheet.el.querySelector(".confirm-btn").addEventListener("click", async () => {
       const cleared = await clearImagesInRange("0000-01-01", clearFromInput.value);
       confirmSheet.close();
-      clearResultEl.textContent = `Cleared images from ${cleared} entr${cleared === 1 ? "y" : "ies"}.`;
+      clearResultEl.textContent = `Cleared media from ${cleared} entr${cleared === 1 ? "y" : "ies"}.`;
       clearResultEl.classList.remove("hidden");
       refreshStorageEstimate();
     });

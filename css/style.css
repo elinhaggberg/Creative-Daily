@@ -37,8 +37,11 @@
   --border: #e3d7b8;
   --text: #241c1c;
   --text-dim: #8a7f6d;
-  --accent: #b9a6ff;
-  --accent-text: #241c1c;
+  /* Matches the Midnight swatch -- the default accent (see theme.js) -- so
+     first paint (before theme.js sets the inline override) doesn't flash a
+     different color. */
+  --accent: #3b2352;
+  --accent-text: #ffffff;
   --danger: #e0454a;
   --font-heading: ui-serif, Georgia, "Times New Roman", serif;
   --radius: 22px;
@@ -252,8 +255,35 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .photo-preview-clear { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; display: flex; align-items: center; justify-content: center; }
 .photo-preview-clear .icon { width: 0.8em; height: 0.8em; }
 
-/* ---- Prompt card ---- */
-.prompt-card { margin: 6px 16px 20px; padding: 22px; border-radius: var(--radius); background: var(--card-tint, var(--surface-2)); border: 1px solid var(--border); }
+/* Voice memo recorder (in the entry editor) */
+.voice-recorder { margin-bottom: 16px; padding: 22px 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-2); }
+.voice-state { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.voice-state-active { flex-direction: row; justify-content: center; gap: 12px; }
+.voice-record-btn { width: 62px; height: 62px; border-radius: 50%; background: var(--accent); color: var(--accent-text); display: flex; align-items: center; justify-content: center; }
+.voice-record-btn .icon { width: 1.5rem; height: 1.5rem; }
+.voice-record-btn:active { transform: scale(0.93); }
+.voice-hint { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
+.voice-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: voice-pulse 1s ease-in-out infinite; }
+@keyframes voice-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.voice-rec-time { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 3ch; }
+.voice-state audio, .entry-card-audio-wrap audio { width: 100%; }
+#voice-done { width: 100%; }
+#voice-done .form-actions { margin-top: 12px; }
+.entry-card-audio-wrap { padding: 14px 16px 4px; }
+
+/* ---- Prompt card (settled state, once something's been logged) ---- */
+.prompt-card {
+  margin: 6px 16px 20px;
+  padding: 22px;
+  border-radius: var(--radius);
+  background: var(--card-tint, var(--surface-2));
+  border: 1px solid var(--border);
+  animation: prompt-settle 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes prompt-settle {
+  from { transform: translateY(-10px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
 .prompt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .prompt-card-heading { margin: 0; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); }
 .prompt-card-date { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
@@ -262,6 +292,73 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .prompt-card-body { font-family: var(--font-serif); font-style: italic; color: var(--text-dim); font-size: 1.02rem; line-height: 1.55; margin: 0 0 6px; white-space: pre-line; }
 .prompt-card-meta { color: var(--text-dim); font-size: 0.88rem; margin: 0; }
 .prompt-card-link { display: inline-block; margin-top: 10px; color: var(--accent); font-weight: 600; font-size: 0.92rem; }
+
+/* ---- Prompt hero: the bare, centered, literary presentation Home shows
+   before anything's been logged for the day. No card, no border -- just
+   the prompt sitting quietly in the middle of the page, like an epigraph. */
+.page-body.home-body-empty { display: flex; flex-direction: column; }
+.page-body.home-body-empty #home-prompt-slot { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.prompt-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 10px 36px;
+  min-height: 0;
+  animation: prompt-hero-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes prompt-hero-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.prompt-hero-heading {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.prompt-hero-category {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.prompt-hero-title {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  line-height: 1.25;
+  margin: 0;
+  max-width: 20ch;
+}
+.prompt-hero-body {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--text-dim);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  margin: 6px 0 0;
+  max-width: 32ch;
+  white-space: pre-line;
+  position: relative;
+  padding: 0 0.2em;
+}
+.prompt-hero-meta { color: var(--text-dim); font-size: 0.9rem; margin: 8px 0 0; }
+.prompt-hero-link { display: inline-block; margin-top: 14px; color: var(--accent); font-weight: 600; font-size: 0.95rem; }
+.prompt-hero-date {
+  margin: 28px 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  opacity: 0.8;
+}
 
 /* ---- Day entries: full-width stack, or 2-col masonry from the 2nd on ---- */
 .entry-stack, .entry-columns { padding: 0 16px 16px; }
@@ -374,5 +471,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
   .print-entries { margin-top: 20px; display: flex; flex-direction: column; gap: 22px; }
   .print-entry-type { text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.7rem; font-weight: 700; color: #777; font-family: sans-serif; margin: 0 0 6px; }
   .print-entry-text { white-space: pre-wrap; line-height: 1.6; }
+  .print-entry-audio-note { font-style: italic; color: #777; font-size: 0.85rem; }
   .print-entry img { max-width: 100%; max-height: 500px; object-fit: contain; display: block; margin-bottom: 10px; }
 }

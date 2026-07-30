@@ -56,6 +56,8 @@ export function createEmptyEntry(dateKey, promptId) {
     text: "",
     images: [],
     url: "",
+    audio: "",
+    audioDuration: 0,
     createdAt: Date.now(),
   };
 }
@@ -127,29 +129,34 @@ export async function getMissedDateKeys() {
   return missed;
 }
 
-// Rough total size (in bytes) of every image data: URI currently stored —
-// base64 runs ~4 bytes per 3 source bytes, close enough for a "here's about
-// how much space this is using" estimate in the storage-management sheet.
+// Rough total size (in bytes) of every image/audio data: URI currently
+// stored — base64 runs ~4 bytes per 3 source bytes, close enough for a
+// "here's about how much space this is using" estimate in the
+// storage-management sheet. Voice recordings tend to be the biggest single
+// offender, so they're counted right alongside photos.
 export async function estimateImageBytes() {
   const entries = await getEntries();
   let total = 0;
   for (const entry of entries) {
     for (const img of entry.images || []) total += Math.floor((img.length * 3) / 4);
+    if (entry.audio) total += Math.floor((entry.audio.length * 3) / 4);
   }
   return total;
 }
 
-// Strips the actual image bytes from every entry dated within [fromKey,
-// toKey] but keeps the entry itself (type, text, date, prompt) intact, so
-// the day count and log history never lose a day just because its photos
-// were cleared out to save space. Safe to call repeatedly.
+// Strips the actual image/audio bytes from every entry dated within
+// [fromKey, toKey] but keeps the entry itself (type, text, date, prompt)
+// intact, so the day count and log history never lose a day just because
+// its media was cleared out to save space. Safe to call repeatedly.
 export async function clearImagesInRange(fromKey, toKey) {
   const entries = await getEntries();
   let cleared = 0;
   for (const entry of entries) {
     if (entry.dateKey < fromKey || entry.dateKey > toKey) continue;
-    if (!entry.images || entry.images.length === 0) continue;
-    await putOne("entries", { ...entry, images: [], imagesCleared: true });
+    const hasImages = entry.images && entry.images.length > 0;
+    const hasAudio = Boolean(entry.audio);
+    if (!hasImages && !hasAudio) continue;
+    await putOne("entries", { ...entry, images: [], audio: "", imagesCleared: true });
     cleared++;
   }
   return cleared;
@@ -190,6 +197,8 @@ function sanitizeEntry(raw) {
     text: typeof raw.text === "string" ? raw.text : "",
     images: Array.isArray(raw.images) ? raw.images.filter((i) => typeof i === "string") : [],
     url: typeof raw.url === "string" ? raw.url : "",
+    audio: typeof raw.audio === "string" ? raw.audio : "",
+    audioDuration: typeof raw.audioDuration === "number" ? raw.audioDuration : 0,
     imagesCleared: raw.imagesCleared === true,
     createdAt: typeof raw.createdAt === "number" ? raw.createdAt : Date.now(),
     updatedAt: Date.now(),

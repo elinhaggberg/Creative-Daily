@@ -106,6 +106,26 @@
     <input type="file" accept="image/*" id="entry-editor-library-input" hidden />
     <div class="photo-preview-row hidden" id="entry-editor-image-preview-wrap"></div>
 
+    <div class="voice-recorder hidden" id="entry-editor-voice-section">
+      <div class="voice-state" id="voice-idle">
+        <button type="button" class="voice-record-btn" id="voice-record-btn" aria-label="Start recording"><svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5v4M8.5 21.5h7"/></svg></button>
+        <p class="voice-hint">Tap to record</p>
+      </div>
+      <div class="voice-state voice-state-active hidden" id="voice-active">
+        <span class="voice-rec-dot"></span>
+        <span class="voice-rec-time" id="voice-rec-time">0:00</span>
+        <button type="button" class="text-btn danger" id="voice-stop-btn">Stop</button>
+      </div>
+      <div class="voice-state hidden" id="voice-done">
+        <audio controls id="voice-audio-preview"></audio>
+        <div class="form-actions">
+          <button type="button" class="text-btn secondary" id="voice-rerecord-btn">Re-record</button>
+          <button type="button" class="text-btn secondary" id="voice-clear-btn">Remove</button>
+        </div>
+      </div>
+      <p class="import-message error hidden" id="voice-error"></p>
+    </div>
+
     <label class="field">
       <textarea id="entry-editor-text" rows="2"></textarea>
     </label>
@@ -267,14 +287,14 @@
 
     <p class="card-detail-section-label" style="margin-top:20px;">Free up space</p>
     <p class="settings-note" id="data-storage-estimate"></p>
-    <p class="import-message error hidden" id="data-clear-gate-message">Export everything first (above) — this clears image data permanently.</p>
+    <p class="import-message error hidden" id="data-clear-gate-message">Export everything first (above) — this clears media data permanently.</p>
     <label class="field">
-      <span>Clear images on or before</span>
+      <span>Clear photos &amp; recordings on or before</span>
       <input type="date" id="data-clear-before" />
     </label>
-    <p class="settings-note">The entries themselves — text, type, and date — always stay in your log and count toward your Day number. Only the photo data is removed.</p>
+    <p class="settings-note">The entries themselves — text, type, and date — always stay in your log and count toward your Day number. Only the photo/audio data is removed.</p>
     <div class="form-actions">
-      <button type="button" class="text-btn danger" id="data-clear-btn" disabled>Clear images</button>
+      <button type="button" class="text-btn danger" id="data-clear-btn" disabled>Clear photos &amp; recordings</button>
     </div>
     <p class="import-message hidden" id="data-clear-result"></p>
   </div>
@@ -300,7 +320,7 @@
       </section>
       <section>
         <h3>Capturing what you make</h3>
-        <p>Tap <strong>+</strong> to log a piece: a Note, a Poem, a Short story, an Image, a Gallery of several photos, or a Link. Keep tapping <strong>+</strong> to add more pieces to the same day — the first becomes a full-width card, and each one after arranges itself into columns underneath.</p>
+        <p>Tap <strong>+</strong> to log a piece: a Note, a Poem, a Short story, an Image, a Gallery of several photos, a Link, or a Voice memo. Keep tapping <strong>+</strong> to add more pieces to the same day — the first becomes a full-width card, and each one after arranges itself into columns underneath.</p>
       </section>
       <section>
         <h3>Day counting, not streaks</h3>
@@ -316,7 +336,7 @@
       </section>
       <section>
         <h3>Your data, your device</h3>
-        <p>Everything lives only in this browser, on this device — there's no account and no server. Photos can add up over time, so <strong>Export &amp; manage data</strong> lets you export a full backup and then clear old photos to free up space, without losing the entries themselves.</p>
+        <p>Everything lives only in this browser, on this device — there's no account and no server. Photos and voice recordings can add up over time, so <strong>Export &amp; manage data</strong> lets you export a full backup and then clear old media to free up space, without losing the entries themselves.</p>
         <p><strong>Removing the app from your Home Screen deletes its saved data too.</strong> Export a backup every so often.</p>
       </section>
     </div>

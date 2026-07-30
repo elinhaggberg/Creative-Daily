@@ -1,6 +1,11 @@
 import { typeFor } from "./entryTypes.js";
 import { hostnameFor } from "./util.js";
-import { ICON_EXTERNAL, ICON_IMAGE } from "./icons.js";
+import { ICON_EXTERNAL, ICON_IMAGE, ICON_MIC } from "./icons.js";
+
+function formatDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 // Builds one entry card for the day view (Home's "today", My Log's day
 // detail, and the print booklet reuse the same node shape). `onOpen` is
@@ -12,10 +17,21 @@ export function createEntryNode(entry, onOpen) {
 
   const strip = document.createElement("div");
   strip.className = "entry-card-strip";
-  strip.innerHTML = `<span class="entry-card-type-icon">${type.icon}</span><span class="entry-card-type-label">${type.label}</span>`;
+  const durationSuffix = entry.type === "voice" && entry.audio ? ` · ${formatDuration(entry.audioDuration)}` : "";
+  strip.innerHTML = `<span class="entry-card-type-icon">${type.icon}</span><span class="entry-card-type-label">${type.label}${durationSuffix}</span>`;
   article.appendChild(strip);
 
-  if (entry.type === "image" && entry.images[0]) {
+  if (entry.type === "voice" && entry.audio) {
+    const wrap = document.createElement("div");
+    wrap.className = "entry-card-audio-wrap";
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "metadata";
+    audio.src = entry.audio;
+    audio.addEventListener("click", (e) => e.stopPropagation());
+    wrap.appendChild(audio);
+    article.appendChild(wrap);
+  } else if (entry.type === "image" && entry.images[0]) {
     const img = document.createElement("img");
     img.className = "entry-card-media";
     img.loading = "lazy";
@@ -47,9 +63,10 @@ export function createEntryNode(entry, onOpen) {
     img.alt = "";
     article.appendChild(img);
   } else if (entry.imagesCleared) {
+    const isVoice = entry.type === "voice";
     const placeholder = document.createElement("div");
     placeholder.className = "entry-card-cleared";
-    placeholder.innerHTML = `${ICON_IMAGE}<span>Image removed to save space</span>`;
+    placeholder.innerHTML = `${isVoice ? ICON_MIC : ICON_IMAGE}<span>${isVoice ? "Recording" : "Image"} removed to save space</span>`;
     article.appendChild(placeholder);
   }
 

@@ -1,5 +1,5 @@
-import { getDayNumber, todayKey, shouldShowBackupBanner, dismissBackupBanner, markBackedUp, exportBackupData } from "../storage.js";
-import { buildPromptCard, renderEntriesInto, addEntryForDate } from "../dayDetail.js";
+import { getDayNumber, todayKey, getEntriesForDate, shouldShowBackupBanner, dismissBackupBanner, markBackedUp, exportBackupData } from "../storage.js";
+import { buildPromptCard, renderEntryNodesInto, addEntryForDate } from "../dayDetail.js";
 import { openSettingsMenu } from "../settingsMenu.js";
 import { checkOnboarding } from "../onboarding.js";
 import { checkWhatsNew } from "../whatsNew.js";
@@ -15,11 +15,15 @@ export async function renderHome(root, nav) {
 
   root.querySelector("#menu-btn").addEventListener("click", () => openSettingsMenu(refresh));
 
+  const entries = await getEntriesForDate(today);
+  const homeBody = root.querySelector(".page-body");
+  homeBody.classList.toggle("home-body-empty", entries.length === 0);
+
   const promptSlot = root.querySelector("#home-prompt-slot");
-  promptSlot.replaceChildren(buildPromptCard(today));
+  promptSlot.replaceChildren(buildPromptCard(today, { variant: entries.length === 0 ? "hero" : "card" }));
 
   const entriesEl = root.querySelector("#home-entries");
-  await renderEntriesInto(entriesEl, today, refresh);
+  renderEntryNodesInto(entriesEl, entries, refresh);
 
   root.querySelector("#add-btn").addEventListener("click", () => addEntryForDate(today, refresh));
 

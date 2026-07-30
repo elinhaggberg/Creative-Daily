@@ -8,6 +8,11 @@ const CANVAS_WIDTH = 1000;
 const PADDING = 56;
 const CONTENT_WIDTH = CANVAS_WIDTH - PADDING * 2;
 
+function formatDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -149,7 +154,9 @@ export async function renderDayCanvas(dateKey) {
   for (const layout of entryLayouts) {
     ctx.fillStyle = accent;
     ctx.font = "700 13px -apple-system, sans-serif";
-    ctx.fillText(typeFor(layout.entry.type).label.toUpperCase(), PADDING, cursorY);
+    const typeLabel = typeFor(layout.entry.type).label.toUpperCase();
+    const durationSuffix = layout.entry.type === "voice" && layout.entry.audio ? ` · ${formatDuration(layout.entry.audioDuration)}` : "";
+    ctx.fillText(typeLabel + durationSuffix, PADDING, cursorY);
     cursorY += 24;
 
     if (layout.img) {
