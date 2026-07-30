@@ -12,20 +12,18 @@ import {
 } from "./storage.js";
 import { openSheet } from "./sheet.js";
 import { shareOrDownload, shareFilesOrDownload, filenameFor } from "./share.js";
-import { exportDayAsImage, collectVoiceFiles } from "./canvasExport.js";
+import { buildDayImageCards, exportEntryAsImage, collectVoiceFiles } from "./canvasExport.js";
+import { openImagePickerSheet } from "./imagePicker.js";
 import { promptSummaryFor } from "./dayDetail.js";
 import { formatDate } from "./util.js";
 import { typeFor } from "./entryTypes.js";
+import { formatDuration } from "./entryCard.js";
+import { dataUrlToBlob, fileExtensionForAudio } from "./voiceRecorder.js";
 
 function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatAudioDuration(seconds) {
-  const s = Math.max(0, Math.round(seconds || 0));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 async function collectVoiceFilesForRange(fromKey, toKey) {
@@ -35,10 +33,77 @@ async function collectVoiceFilesForRange(fromKey, toKey) {
   return files;
 }
 
-// Builds a hidden, print-only DOM tree covering every day in [fromKey,
-// toKey] and triggers the browser's native print dialog -- "Save as PDF" in
-// that dialog is what produces the actual booklet. No PDF library needed,
-// and it works the same on iOS Share Sheet / Android / desktop print-to-PDF.
+// A single day in printed form -- the day's prompt, then every entry in it.
+// Shared by the multi-day booklet and a single entry's own "print this"
+// action (which just calls it with a one-entry list).
+function buildPrintPage(dayNumber, dateKey, entries) {
+  const { category, headline, prompt } = promptSummaryFor(dateKey);
+
+  const page = document.createElement("section");
+  page.className = "print-page";
+  page.innerHTML = `
+    <p class="print-daynum">Day ${dayNumber} · ${formatDate(dateKey)}</p>
+    <p class="print-category">${category.label}</p>
+    <h2>${headline}</h2>
+    ${prompt.body && prompt.title ? `<p class="print-prompt-body">${prompt.body}</p>` : ""}
+    ${prompt.meta ? `<p class="print-prompt-meta">${prompt.meta}</p>` : ""}
+  `;
+
+  const entriesWrap = document.createElement("div");
+  entriesWrap.className = "print-entries";
+  for (const entry of entries) {
+    const entryEl = document.createElement("div");
+    entryEl.className = "print-entry";
+    const typeLabel = document.createElement("p");
+    typeLabel.className = "print-entry-type";
+    typeLabel.textContent =
+      entry.type === "voice" && entry.audio
+        ? `${typeFor(entry.type).label} · ${formatDuration(entry.audioDuration)}`
+        : typeFor(entry.type).label;
+    entryEl.appendChild(typeLabel);
+    for (const src of entry.images || []) {
+      const img = document.createElement("img");
+      img.src = src;
+      entryEl.appendChild(img);
+    }
+    if (entry.type === "voice" && entry.audio) {
+      const note = document.createElement("p");
+      note.className = "print-entry-text print-entry-audio-note";
+      note.textContent = "🎙 Voice recording — a printed page can't play audio; use “Voice recordings” to save it separately.";
+      entryEl.appendChild(note);
+    }
+    if (entry.text) {
+      const p = document.createElement("p");
+      p.className = "print-entry-text";
+      p.textContent = entry.text;
+      entryEl.appendChild(p);
+    }
+    if (entry.url) {
+      const p = document.createElement("p");
+      p.className = "print-entry-text";
+      p.textContent = entry.url;
+      entryEl.appendChild(p);
+    }
+    entriesWrap.appendChild(entryEl);
+  }
+  page.appendChild(entriesWrap);
+  return page;
+}
+
+// Injects a hidden, print-only DOM tree and triggers the browser's native
+// print dialog -- "Save as PDF" in that dialog is what produces the actual
+// file. No PDF library needed, and it works the same on iOS Share Sheet /
+// Android / desktop print-to-PDF.
+function triggerPrint(root) {
+  document.body.appendChild(root);
+  const cleanup = () => root.remove();
+  window.addEventListener("afterprint", cleanup, { once: true });
+  window.print();
+  // Safety net for browsers that never fire afterprint (some mobile
+  // webviews) -- the print dialog has certainly closed by then either way.
+  setTimeout(cleanup, 60000);
+}
+
 async function printBooklet(fromKey, toKey) {
   const days = (await getDaysWithEntries()).filter((d) => d.dateKey >= fromKey && d.dateKey <= toKey).reverse();
 
@@ -51,67 +116,30 @@ async function printBooklet(fromKey, toKey) {
   root.appendChild(cover);
 
   for (const day of days) {
-    const { category, headline, prompt } = promptSummaryFor(day.dateKey);
     const dayNumber = await getDayNumber(day.dateKey);
-
-    const page = document.createElement("section");
-    page.className = "print-page";
-    page.innerHTML = `
-      <p class="print-daynum">Day ${dayNumber} · ${formatDate(day.dateKey)}</p>
-      <p class="print-category">${category.label}</p>
-      <h2>${headline}</h2>
-      ${prompt.body && prompt.title ? `<p class="print-prompt-body">${prompt.body}</p>` : ""}
-      ${prompt.meta ? `<p class="print-prompt-meta">${prompt.meta}</p>` : ""}
-    `;
-
-    const entriesWrap = document.createElement("div");
-    entriesWrap.className = "print-entries";
-    for (const entry of day.entries) {
-      const entryEl = document.createElement("div");
-      entryEl.className = "print-entry";
-      const typeLabel = document.createElement("p");
-      typeLabel.className = "print-entry-type";
-      typeLabel.textContent =
-        entry.type === "voice" && entry.audio
-          ? `${typeFor(entry.type).label} · ${formatAudioDuration(entry.audioDuration)}`
-          : typeFor(entry.type).label;
-      entryEl.appendChild(typeLabel);
-      for (const src of entry.images || []) {
-        const img = document.createElement("img");
-        img.src = src;
-        entryEl.appendChild(img);
-      }
-      if (entry.type === "voice" && entry.audio) {
-        const note = document.createElement("p");
-        note.className = "print-entry-text print-entry-audio-note";
-        note.textContent = "🎙 Voice recording — a printed page can't play audio; use “Voice recordings” to save it separately.";
-        entryEl.appendChild(note);
-      }
-      if (entry.text) {
-        const p = document.createElement("p");
-        p.className = "print-entry-text";
-        p.textContent = entry.text;
-        entryEl.appendChild(p);
-      }
-      if (entry.url) {
-        const p = document.createElement("p");
-        p.className = "print-entry-text";
-        p.textContent = entry.url;
-        entryEl.appendChild(p);
-      }
-      entriesWrap.appendChild(entryEl);
-    }
-    page.appendChild(entriesWrap);
-    root.appendChild(page);
+    root.appendChild(buildPrintPage(dayNumber, day.dateKey, day.entries));
   }
 
-  document.body.appendChild(root);
-  const cleanup = () => root.remove();
-  window.addEventListener("afterprint", cleanup, { once: true });
-  window.print();
-  // Safety net for browsers that never fire afterprint (some mobile
-  // webviews) -- the print dialog has certainly closed by then either way.
-  setTimeout(cleanup, 60000);
+  triggerPrint(root);
+}
+
+async function printSingleEntry(entry, dateKey) {
+  const dayNumber = await getDayNumber(dateKey);
+  const root = document.createElement("div");
+  root.className = "print-booklet";
+  root.appendChild(buildPrintPage(dayNumber, dateKey, [entry]));
+  triggerPrint(root);
+}
+
+// Shares/downloads directly when there's only one image (nothing to choose
+// between); opens the picker sheet when there's more than one.
+async function shareOrPickImages(cards) {
+  if (cards.length === 0) return;
+  if (cards.length === 1) {
+    await shareFilesOrDownload(cards[0].files);
+    return;
+  }
+  openImagePickerSheet(cards);
 }
 
 export async function openDayShareSheet(dateKey) {
@@ -128,11 +156,9 @@ export async function openDayShareSheet(dateKey) {
   voiceHint.classList.toggle("hidden", !hasVoice);
 
   el.querySelector("#day-share-image-btn").addEventListener("click", async () => {
-    // A PNG can't play audio -- when this day has a voice memo, its
-    // recording rides along as an extra file in the same share action
-    // instead of getting silently left out.
-    await exportDayAsImage(dateKey);
     sheet.close();
+    const cards = await buildDayImageCards(dateKey);
+    await shareOrPickImages(cards);
   });
   el.querySelector("#day-share-pdf-btn").addEventListener("click", async () => {
     sheet.close();
@@ -146,6 +172,42 @@ export async function openDayShareSheet(dateKey) {
   voiceBtn.addEventListener("click", async () => {
     const files = await collectVoiceFiles(entries, dateKey);
     if (files.length > 0) await shareFilesOrDownload(files);
+    sheet.close();
+  });
+}
+
+// Same menu as the day share sheet, scoped to one piece -- reuses the same
+// template, just retitled, since a single entry is really just a day share
+// with one candidate entry.
+export function openEntryShareSheet(entry, dateKey) {
+  const sheet = openSheet("tpl-day-share");
+  const el = sheet.el;
+  el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
+  el.querySelector("#share-sheet-title").textContent = "Share this piece";
+
+  const hasVoice = entry.type === "voice" && Boolean(entry.audio);
+  const voiceBtn = el.querySelector("#day-share-voice-btn");
+  const voiceHint = el.querySelector("#day-share-voice-hint");
+  voiceBtn.classList.toggle("hidden", !hasVoice);
+  voiceHint.classList.toggle("hidden", !hasVoice);
+
+  el.querySelector("#day-share-image-btn").addEventListener("click", async () => {
+    sheet.close();
+    await exportEntryAsImage(entry, dateKey);
+  });
+  el.querySelector("#day-share-pdf-btn").addEventListener("click", async () => {
+    sheet.close();
+    await printSingleEntry(entry, dateKey);
+  });
+  el.querySelector("#day-share-json-btn").addEventListener("click", async () => {
+    const data = { type: "creative-daily-entry", version: 1, exportedAt: new Date().toISOString(), entry };
+    await shareOrDownload(filenameFor(`creative-daily-${dateKey}`), JSON.stringify(data, null, 2));
+    sheet.close();
+  });
+  voiceBtn.addEventListener("click", async () => {
+    const blob = await dataUrlToBlob(entry.audio);
+    const file = new File([blob], filenameFor(`creative-daily-${dateKey}-voice`, fileExtensionForAudio(blob)), { type: blob.type });
+    await shareFilesOrDownload([file]);
     sheet.close();
   });
 }

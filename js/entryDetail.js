@@ -3,8 +3,7 @@ import { openSheet } from "./sheet.js";
 import { openEntryEditor } from "./entryEditor.js";
 import { typeFor } from "./entryTypes.js";
 import { buildEntryMedia, buildEntryBody, formatDuration } from "./entryCard.js";
-import { shareOrDownload, shareFilesOrDownload, filenameFor } from "./share.js";
-import { dataUrlToBlob, fileExtensionForAudio } from "./voiceRecorder.js";
+import { openEntryShareSheet } from "./dataManagement.js";
 
 // Tapping a card opens this read-only preview first -- share/edit/delete
 // live up top, same shape as My Index's snippet detail -- rather than
@@ -30,22 +29,8 @@ export function openEntryDetail(entry, { refresh }) {
     openEntryEditor({ entry, isNew: false, refresh });
   });
 
-  el.querySelector("#entry-detail-share-btn").addEventListener("click", async () => {
-    // A voice memo shares as the actual recording (nothing else to hand
-    // over); everything else exports as a single-entry JSON file, same
-    // shape a full day's export uses.
-    if (entry.type === "voice" && entry.audio) {
-      const blob = await dataUrlToBlob(entry.audio);
-      const file = new File(
-        [blob],
-        filenameFor(`creative-daily-${entry.dateKey}-voice`, fileExtensionForAudio(blob)),
-        { type: blob.type }
-      );
-      await shareFilesOrDownload([file]);
-      return;
-    }
-    const data = { type: "creative-daily-entry", version: 1, exportedAt: new Date().toISOString(), entry };
-    await shareOrDownload(filenameFor(`creative-daily-${entry.dateKey}`), JSON.stringify(data, null, 2));
+  el.querySelector("#entry-detail-share-btn").addEventListener("click", () => {
+    openEntryShareSheet(entry, entry.dateKey);
   });
 
   el.querySelector("#entry-detail-delete-btn").addEventListener("click", () => {

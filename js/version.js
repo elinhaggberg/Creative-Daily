@@ -18,6 +18,9 @@ export const CHANGELOG = [
       "Poem and Short story now open as a full-screen writing view instead of a compact card.",
       "Artwork prompts now link to a Google Images search, so you can actually look at the piece.",
       "Fixed a masonry layout bug where a photo card's height wasn't measured until after it fully loaded, sometimes stacking every following piece into one lopsided column.",
+      "Fixed the entry preview collapsing to almost nothing for short pieces, and tightened up spacing in the capture form.",
+      "A single piece now has its own Share menu — image, PDF, or JSON — same as a full day.",
+      "Redesigned image export: each piece now renders as its own shareable card (1080×1350, Instagram-portrait size) instead of one long stitched screenshot. A day with more than one piece opens a picker to choose which cards to keep, one PNG per piece.",
     ],
   },
 ];

@@ -188,6 +188,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .sheet.entry-editor-fullscreen #entry-editor-text:focus { outline: none; }
 
 /* Entry detail preview */
+.entry-detail-sheet { min-height: 45dvh; }
 .entry-detail-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent); }
 .entry-detail-badge .icon { width: 1em; height: 1em; }
 #entry-detail-media { margin: 0 -18px 14px; }
@@ -282,6 +283,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .type-chip.active { border-color: var(--accent); color: var(--text); background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
 
 /* Photo preview */
+#entry-editor-image-actions { margin-bottom: 16px; }
 .photo-preview-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
 .photo-preview-row.gallery-grid .photo-preview-wrap { width: calc(33.333% - 7px); }
 .photo-preview-wrap { position: relative; }
@@ -419,6 +421,37 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .entry-card-text { margin: 0; font-size: 0.95rem; line-height: 1.55; white-space: pre-wrap; }
 .entry-text-poem { font-family: var(--font-serif); font-style: italic; }
 .entry-text-story { font-family: var(--font-serif); }
+
+/* ---- Image export picker ---- */
+.image-picker-sheet { max-height: 85dvh; }
+.image-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px 0 16px; }
+.image-picker-item {
+  position: relative;
+  aspect-ratio: 1080 / 1350;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 3px solid transparent;
+  background: var(--surface-2);
+}
+.image-picker-item img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.4; transition: opacity 0.15s; }
+.image-picker-item.selected { border-color: var(--accent); }
+.image-picker-item.selected img { opacity: 1; }
+.image-picker-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+.image-picker-check .icon { width: 0.85em; height: 0.85em; }
+.image-picker-item.selected .image-picker-check { opacity: 1; background: var(--accent); color: var(--accent-text); }
 
 /* ---- My Log day cards ---- */
 .day-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px 16px 16px; }
