@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<script>
+  try {
+    var themeMode = (JSON.parse(localStorage.getItem("cd_theme_v1") || "{}") || {}).mode;
+    document.documentElement.dataset.theme = themeMode || "playful";
+  } catch (e) {}
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Creative Daily</title>
+<meta name="description" content="A daily creativity prompt and a beautiful place to log whatever you make — a word, a poem, a photo, a sketch. No streaks, no pressure, just Day by Day." />
+<meta name="theme-color" content="#f7f0e4" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ===== Home ===== -->
+<template id="tpl-home">
+  <header class="topbar home-topbar">
+    <p class="home-daynum" id="home-daynum">Day 1</p>
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu"><svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"/></svg></button>
+  </header>
+  <div id="backup-banner" class="banner hidden">
+    <p>You haven't backed up in a while — export takes a second.</p>
+    <div class="banner-actions">
+      <button type="button" class="text-btn primary" id="backup-now-btn">Back up now</button>
+      <button type="button" class="text-btn" id="backup-dismiss-btn">Later</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div id="home-prompt-slot"></div>
+    <div id="home-entries" class="entry-stack"></div>
+  </div>
+  <button class="fab" id="add-btn" aria-label="Add to today"><svg class="icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z"/></svg></button>
+</template>
+
+<!-- ===== My Log ===== -->
+<template id="tpl-log">
+  <header class="topbar">
+    <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
+    <h1>My Log</h1>
+    <button class="icon-btn" id="search-btn" aria-label="Search"><svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></button>
+    <button class="icon-btn" id="filter-btn" aria-label="Filter"><svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg></button>
+    <button class="icon-btn" id="menu-btn" aria-label="Menu"><svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"/></svg></button>
+  </header>
+  <div class="page-body">
+    <div class="log-headline-row">
+      <p class="card-detail-section-label" id="log-headline" style="padding:0;">Your log</p>
+      <button type="button" class="text-btn hidden" id="log-filter-clear-btn">Clear</button>
+    </div>
+    <div class="day-grid" id="log-grid"></div>
+  </div>
+</template>
+
+<!-- ===== Calendar ===== -->
+<template id="tpl-calendar">
+  <header class="topbar">
+    <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
+    <h1>Calendar</h1>
+  </header>
+  <div class="calendar-scroll">
+    <div class="calendar-nav">
+      <button type="button" class="icon-btn" id="calendar-prev-btn" aria-label="Previous month"><svg class="icon" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M41 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L41 233.4z"/></svg></button>
+      <span id="calendar-month-label" class="calendar-month-label"></span>
+      <button type="button" class="icon-btn" id="calendar-next-btn" aria-label="Next month"><svg class="icon" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></button>
+    </div>
+    <div class="calendar-weekdays" id="calendar-weekdays"></div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div class="calendar-legend">
+      <span><i class="legend-dot is-done"></i> Created</span>
+      <span><i class="legend-dot is-missed"></i> Catch up</span>
+    </div>
+    <p class="calendar-hint">Tap a missed day to add something to it retroactively — there's no penalty for catching up.</p>
+  </div>
+</template>
+
+<!-- ===== Entry editor (capture sheet) ===== -->
+<template id="tpl-entry-editor">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2 id="entry-editor-heading">Add to today</h2>
+      <button class="icon-btn hidden" id="entry-editor-delete-btn" aria-label="Delete" title="Delete"><svg class="icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/></svg></button>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+
+    <div class="type-chip-row" id="entry-editor-type-row"></div>
+
+    <label class="field hidden" id="entry-editor-url-field">
+      <span>Link</span>
+      <input type="url" id="entry-editor-url" placeholder="https://…" autocomplete="off" />
+    </label>
+
+    <div class="form-actions hidden" id="entry-editor-image-actions">
+      <button type="button" class="text-btn secondary" id="entry-editor-camera-btn">Camera</button>
+      <button type="button" class="text-btn secondary" id="entry-editor-library-btn"><span id="entry-editor-image-actions-label">Add photo</span></button>
+    </div>
+    <input type="file" accept="image/*" capture="environment" id="entry-editor-camera-input" hidden />
+    <input type="file" accept="image/*" id="entry-editor-library-input" hidden />
+    <div class="photo-preview-row hidden" id="entry-editor-image-preview-wrap"></div>
+
+    <label class="field">
+      <textarea id="entry-editor-text" rows="2"></textarea>
+    </label>
+
+    <p class="import-message error hidden" id="entry-editor-save-error"></p>
+    <div class="form-actions">
+      <button type="button" class="text-btn primary" id="entry-editor-save-btn">Save</button>
+    </div>
+  </div>
+</template>
+
+<!-- ===== Day detail ===== -->
+<template id="tpl-day-detail">
+  <div class="sheet day-detail-sheet">
+    <header class="sheet-header">
+      <div class="day-detail-heading">
+        <p class="day-detail-daynum" id="day-detail-daynum"></p>
+        <h2 id="day-detail-date"></h2>
+      </div>
+      <button class="icon-btn hidden" id="day-detail-share-btn" aria-label="Share / export" title="Share / export"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M384 192c53 0 96-43 96-96s-43-96-96-96-96 43-96 96c0 5.4 .5 10.8 1.3 16L159.6 184.1c-16.9-15-39.2-24.1-63.6-24.1-53 0-96 43-96 96s43 96 96 96c24.4 0 46.6-9.1 63.6-24.1L289.3 400c-.9 5.2-1.3 10.5-1.3 16 0 53 43 96 96 96s96-43 96-96-43-96-96-96c-24.4 0-46.6 9.1-63.6 24.1L190.7 272c.9-5.2 1.3-10.5 1.3-16s-.5-10.8-1.3-16l129.7-72.1c16.9 15 39.2 24.1 63.6 24.1z"/></svg></button>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div id="day-detail-prompt-slot"></div>
+    <p class="empty-state hidden" id="day-detail-empty">Nothing logged for this day yet.</p>
+    <div id="day-detail-entries" class="entry-stack"></div>
+    <div class="form-actions">
+      <button type="button" class="text-btn secondary" id="day-detail-add-btn">+ Add a piece to this day</button>
+    </div>
+  </div>
+</template>
+
+<!-- ===== Day share/export ===== -->
+<template id="tpl-day-share">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Share this day</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <button type="button" class="menu-item" id="day-share-image-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.8" fill="currentColor" stroke="none"/><path d="M3.5 17l5.5-5.5 3 3L18 8.5l2.5 2.5"/></svg>
+      <span>Save as image (PNG)</span>
+    </button>
+    <button type="button" class="menu-item" id="day-share-pdf-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5"/><path d="M9 13h7M9 17h5"/></svg>
+      <span>Save as PDF (via Print)</span>
+    </button>
+    <button type="button" class="menu-item" id="day-share-json-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4 19h16"/></svg>
+      <span>Export as JSON</span>
+    </button>
+  </div>
+</template>
+
+<!-- ===== Log filter ===== -->
+<template id="tpl-log-filter">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Filter</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <p class="card-detail-section-label">Type</p>
+    <div class="type-chip-row" id="log-filter-type-row"></div>
+    <p class="card-detail-section-label" style="margin-top:8px;">Date range</p>
+    <div class="field-row">
+      <label class="field">
+        <span>From</span>
+        <input type="date" id="log-filter-date-from" />
+      </label>
+      <label class="field">
+        <span>To</span>
+        <input type="date" id="log-filter-date-to" />
+      </label>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="text-btn secondary" id="log-filter-clear-btn">Clear filters</button>
+    </div>
+  </div>
+</template>
+
+<!-- ===== Log search ===== -->
+<template id="tpl-log-search">
+  <div class="sheet search-sheet">
+    <header class="sheet-header">
+      <h2>Search</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <label class="field">
+      <input type="text" id="log-search-input" placeholder="Search your log…" autocomplete="off" />
+    </label>
+    <p class="empty-state hidden" id="log-search-empty"></p>
+    <div class="day-grid" id="log-search-results"></div>
+  </div>
+</template>
+
+<!-- ===== Settings ===== -->
+<template id="tpl-settings-menu">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Menu</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <button type="button" class="menu-item" id="log-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span>My Log</span>
+    </button>
+    <button type="button" class="menu-item" id="calendar-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span>Calendar &amp; catch up</span>
+    </button>
+    <button type="button" class="menu-item" id="instructions-btn">
+      <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><circle cx="256" cy="256" r="216" fill="none" stroke="currentColor" stroke-width="40" /><circle cx="256" cy="176" r="28" /><rect x="228" y="232" width="56" height="180" rx="12" /></svg>
+      <span>Instructions</span>
+    </button>
+    <button type="button" class="menu-item" id="customize-btn">
+      <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect x="32" y="86" width="448" height="32" rx="16" /><circle cx="176" cy="102" r="40" /><rect x="32" y="240" width="448" height="32" rx="16" /><circle cx="336" cy="256" r="40" /><rect x="32" y="394" width="448" height="32" rx="16" /><circle cx="256" cy="410" r="40" /></svg>
+      <span>Customize</span>
+    </button>
+    <button type="button" class="menu-item" id="data-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 0 0 16 0A8 3 0 0 0 4 6zM4 6v12a8 3 0 0 0 16 0V6"/><path d="M4 12a8 3 0 0 0 16 0"/></svg>
+      <span>Export &amp; manage data</span>
+    </button>
+    <button type="button" class="menu-item" id="import-btn">
+      <svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M64 0C28.7 0 0 28.7 0 64l0 240 182.1 0-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l72 72c9.4 9.4 9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-182.1 0 0 96c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-277.5c0-17-6.7-33.3-18.7-45.3L258.7 18.7C246.7 6.7 230.5 0 213.5 0L64 0zM325.5 176L232 176c-13.3 0-24-10.7-24-24L208 58.5 325.5 176z"/></svg>
+      <span>Import a backup</span>
+    </button>
+  </div>
+</template>
+
+<!-- ===== Data management ===== -->
+<template id="tpl-data-management">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Export &amp; manage data</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+
+    <p class="card-detail-section-label">Full backup</p>
+    <p class="settings-note">Everything, including every photo — for safekeeping or moving devices.</p>
+    <div class="form-actions">
+      <button type="button" class="text-btn primary" id="data-export-all-btn">Export everything</button>
+    </div>
+
+    <p class="card-detail-section-label" style="margin-top:20px;">Export a collection</p>
+    <p class="settings-note">Pick a date range to export as a printable PDF booklet or a JSON file.</p>
+    <div class="field-row">
+      <label class="field">
+        <span>From</span>
+        <input type="date" id="data-range-from" />
+      </label>
+      <label class="field">
+        <span>To</span>
+        <input type="date" id="data-range-to" />
+      </label>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="text-btn secondary" id="data-range-pdf-btn">PDF booklet</button>
+      <button type="button" class="text-btn secondary" id="data-range-json-btn">JSON</button>
+    </div>
+
+    <p class="card-detail-section-label" style="margin-top:20px;">Free up space</p>
+    <p class="settings-note" id="data-storage-estimate"></p>
+    <p class="import-message error hidden" id="data-clear-gate-message">Export everything first (above) — this clears image data permanently.</p>
+    <label class="field">
+      <span>Clear images on or before</span>
+      <input type="date" id="data-clear-before" />
+    </label>
+    <p class="settings-note">The entries themselves — text, type, and date — always stay in your log and count toward your Day number. Only the photo data is removed.</p>
+    <div class="form-actions">
+      <button type="button" class="text-btn danger" id="data-clear-btn" disabled>Clear images</button>
+    </div>
+    <p class="import-message hidden" id="data-clear-result"></p>
+  </div>
+</template>
+
+<!-- ===== Instructions ===== -->
+<template id="tpl-instructions">
+  <div class="sheet instructions-sheet">
+    <header class="sheet-header">
+      <h2>Instructions</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div class="instructions-body">
+      <section>
+        <h3>Installing on your phone</h3>
+        <p>This is a web app, not an app-store app — but you can add it to your Home Screen so it opens full-screen, just like a regular app.</p>
+        <p><strong>iOS (Safari):</strong> tap the Share icon, then "Add to Home Screen".</p>
+        <p><strong>Android (Chrome):</strong> tap the ⋮ menu, then "Add to Home screen" (or "Install app").</p>
+      </section>
+      <section>
+        <h3>The daily prompt</h3>
+        <p>Every day brings a new prompt — a word, a subject, a famous artwork, a line of text, or a piece of music. It's the same prompt all day, and the same one for you no matter when you open the app that day.</p>
+      </section>
+      <section>
+        <h3>Capturing what you make</h3>
+        <p>Tap <strong>+</strong> to log a piece: a Note, a Poem, a Short story, an Image, a Gallery of several photos, or a Link. Keep tapping <strong>+</strong> to add more pieces to the same day — the first becomes a full-width card, and each one after arranges itself into columns underneath.</p>
+      </section>
+      <section>
+        <h3>Day counting, not streaks</h3>
+        <p>There's no streak to lose. The small "Day N" label only moves forward the next time you create something new — skip a day (or a week) and it simply waits for you at the same number until you pick it back up.</p>
+      </section>
+      <section>
+        <h3>My Log &amp; the Calendar</h3>
+        <p>My Log holds every day you've ever created something, searchable and filterable by type or date. The Calendar (in this menu) lets you catch up on a day you skipped — tap a missed day to log something for it retroactively.</p>
+      </section>
+      <section>
+        <h3>Sharing a day</h3>
+        <p>Open any day and tap the share icon to save it as an image, export it as a JSON file, or print it — choosing "Save as PDF" in the print dialog turns it (or a whole date range, from Export &amp; manage data) into a PDF booklet.</p>
+      </section>
+      <section>
+        <h3>Your data, your device</h3>
+        <p>Everything lives only in this browser, on this device — there's no account and no server. Photos can add up over time, so <strong>Export &amp; manage data</strong> lets you export a full backup and then clear old photos to free up space, without losing the entries themselves.</p>
+        <p><strong>Removing the app from your Home Screen deletes its saved data too.</strong> Export a backup every so often.</p>
+      </section>
+    </div>
+  </div>
+</template>
+
+<!-- ===== Customize ===== -->
+<template id="tpl-customize">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Customize</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div class="theme-option-list">
+      <button type="button" class="theme-option" data-theme-mode="playful">
+        <span class="theme-swatch-preview playful"></span>
+        <span>Playful</span>
+      </button>
+      <button type="button" class="theme-option" data-theme-mode="light">
+        <span class="theme-swatch-preview light"></span>
+        <span>Light</span>
+      </button>
+      <button type="button" class="theme-option" data-theme-mode="dark">
+        <span class="theme-swatch-preview dark"></span>
+        <span>Dark</span>
+      </button>
+    </div>
+    <div class="playful-accent-picker hidden" id="playful-accent-picker">
+      <p class="playful-accent-label">Accent color</p>
+      <div class="swatch-row" id="playful-swatch-row"></div>
+    </div>
+  </div>
+</template>
+
+<!-- ===== Import ===== -->
+<template id="tpl-import">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Import</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <p class="import-hint">Choose an exported Creative Daily backup or collection file.</p>
+    <button type="button" class="text-btn primary import-file-btn">Choose file…</button>
+    <input type="file" accept="application/json,.json" class="import-file-input" hidden />
+    <p class="import-message" aria-live="polite"></p>
+  </div>
+</template>
+
+<!-- ===== Confirm delete ===== -->
+<template id="tpl-confirm-delete">
+  <div class="sheet confirm-sheet">
+    <h2 class="confirm-title">Delete?</h2>
+    <p class="confirm-message"></p>
+    <div class="form-actions">
+      <button type="button" class="text-btn secondary cancel-btn">Cancel</button>
+      <button type="button" class="text-btn danger confirm-btn">Delete</button>
+    </div>
+  </div>
+</template>
+
+<!-- ===== What's new ===== -->
+<template id="tpl-whats-new">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>What's new</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div class="whats-new-body" id="whats-new-body"></div>
+    <div class="form-actions">
+      <button type="button" class="text-btn primary" id="whats-new-got-it-btn">Got it</button>
+    </div>
+  </div>
+</template>
+
+<!-- ===== How it works (onboarding) ===== -->
+<template id="tpl-how-it-works">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>How this app works</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div class="instructions-body">
+      <section>
+        <h3>A prompt a day</h3>
+        <p>Each day brings one creative prompt — a word, a subject, an artwork, a line of text, or a piece of music. Make whatever it inspires: big or small, any medium.</p>
+      </section>
+      <section>
+        <h3>No streaks</h3>
+        <p>The "Day N" label only counts days you actually created something. Skip as many days as you need — it waits for you instead of resetting.</p>
+      </section>
+      <section>
+        <h3>Your data, your device</h3>
+        <p>Everything you log lives only in this browser, on this device — no account, no server. Back it up from the menu every so often, especially before switching devices.</p>
+      </section>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="text-btn primary" id="how-it-works-got-it-btn">Got it</button>
+    </div>
+  </div>
+</template>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
