@@ -151,20 +151,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
   max-height: 90dvh;
   border-radius: 20px 20px 0 0;
   padding: 8px 18px 28px;
-  display: flex;
-  flex-direction: column;
   overflow-y: auto;
   animation: sheet-up 0.18s ease-out;
 }
-/* A flex column with a max-height + overflow:auto still shrinks its
-   children (default flex-shrink: 1) to try to fit before it ever lets the
-   container scroll -- text elements land shorter than their own content
-   needs and the overflow (still painted, since overflow:visible is the
-   default) bleeds into the next sibling instead of the sheet just
-   scrolling. Every long sheet on this app (a scrollable form, not a fixed
-   card) needs its children to hold their natural height and let the sheet
-   do the scrolling instead. */
-.sheet > * { flex-shrink: 0; }
 @keyframes sheet-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .sheet-header { display: flex; align-items: center; gap: 4px; padding: 10px 0 14px; }
 .sheet-header h2 { flex: 1; font-size: 1.15rem; }
@@ -178,6 +167,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
   max-height: 100dvh;
   border-radius: 0;
   padding-top: calc(8px + env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
 }
 .sheet.entry-editor-fullscreen #entry-editor-text-field {
   flex: 1;
