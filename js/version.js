@@ -30,6 +30,7 @@ export const CHANGELOG = [
       "Grew the prompt library again, 170 to 365 — a full year before any prompt repeats. Filled in more of art history (Renaissance and Baroque masters, more women painters long left out of the story) alongside further reach into Khmer, Korean, Ethiopian, Andean, Persian, and Mughal artwork; Russian, French, Spanish, Chinese, and Arabic literature in public-domain translation; and Cuban, Brazilian, Jamaican, American blues/jazz, and Balkan music.",
       "New in the menu: Guides — seven short starter guides (a daily creative practice, drawing, poetry, short stories, photography, film, and mixed media) for when a practice feels tempting but hard to start. Each one distills the field's conventional wisdom, ends with a start-today assignment, and links a few widely loved books and channels.",
       "Redesigned the image share card: the daily prompt is now a small \"Today's prompt\" line at the top instead of a big headline, so the piece you actually made gets the card.",
+      "Tweaked the share card again: the prompt line is now centered at the top, and the Day number and date moved down to the footer, replacing the piece-type label that used to sit there.",
     ],
   },
 ];

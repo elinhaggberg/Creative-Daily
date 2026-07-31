@@ -1,7 +1,6 @@
 import { getEntriesForDate, getDayNumber } from "./storage.js";
 import { promptSummaryFor } from "./dayDetail.js";
 import { formatPromptDate, hostnameFor } from "./util.js";
-import { typeFor } from "./entryTypes.js";
 import { formatDuration } from "./entryCard.js";
 import { shareFilesOrDownload, filenameFor } from "./share.js";
 import { dataUrlToBlob, fileExtensionForAudio } from "./voiceRecorder.js";
@@ -287,29 +286,32 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
   // A compact header -- the prompt is context, not the headline act, so it
   // stays small and out of the way, leaving the piece itself the bulk of
   // the card (see the CONTENT_H comment below for how that space is split).
+  const centerX = CARD_W / 2;
   let y = 90;
+  ctx.textAlign = "center";
   ctx.fillStyle = TEXT_DIM;
   ctx.font = `700 24px ${SANS}`;
-  ctx.fillText("TODAY'S PROMPT", PAD, y);
-  ctx.textAlign = "right";
-  ctx.font = `26px ${SERIF}`;
-  ctx.fillText(`Day ${dayNumber} · ${formatPromptDate(dateKey)}`, CARD_W - PAD, y);
-  ctx.textAlign = "left";
+  ctx.fillText("TODAY'S PROMPT", centerX, y);
   y += 44;
 
   ctx.font = `700 24px ${SANS}`;
   const catLabelW = ctx.measureText(category.label.toUpperCase()).width;
+  const catGap = 20;
   const headlineFont = `36px ${SERIF}`;
   ctx.font = headlineFont;
-  const headlineMaxW = CONTENT_W - catLabelW - 20;
+  const headlineMaxW = CONTENT_W - catLabelW - catGap;
   const headlineText = truncateToWidth(ctx, headline, headlineMaxW);
+  const headlineW = ctx.measureText(headlineText).width;
 
+  const groupW = catLabelW + catGap + headlineW;
+  const groupX = centerX - groupW / 2;
+  ctx.textAlign = "left";
   ctx.fillStyle = accent;
   ctx.font = `700 24px ${SANS}`;
-  ctx.fillText(category.label.toUpperCase(), PAD, y);
+  ctx.fillText(category.label.toUpperCase(), groupX, y);
   ctx.fillStyle = TEXT;
   ctx.font = headlineFont;
-  ctx.fillText(headlineText, PAD + catLabelW + 20, y);
+  ctx.fillText(headlineText, groupX + catLabelW + catGap, y);
   y += 38;
 
   ctx.strokeStyle = BORDER;
@@ -322,18 +324,15 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
   const contentTop = y;
   const contentBottom = CARD_H - 170;
   const contentHeight = contentBottom - contentTop;
-  const centerX = CARD_W / 2;
 
   const block = await buildContentBlock(ctx, entry);
   const startY = contentTop + Math.max(0, (contentHeight - block.height) / 2);
   block.draw(Math.min(startY, Math.max(contentTop, contentBottom - block.height)), centerX);
 
-  ctx.fillStyle = accent;
-  ctx.font = `700 22px ${SANS}`;
-  ctx.textAlign = "left";
-  ctx.fillText(typeFor(entry.type).label.toUpperCase(), PAD, CARD_H - 100);
   ctx.fillStyle = TEXT_DIM;
   ctx.font = `22px ${SANS}`;
+  ctx.textAlign = "left";
+  ctx.fillText(`Day ${dayNumber} · ${formatPromptDate(dateKey)}`, PAD, CARD_H - 100);
   ctx.textAlign = "right";
   ctx.fillText("Made with Creative Daily", CARD_W - PAD, CARD_H - 100);
   ctx.textAlign = "left";
