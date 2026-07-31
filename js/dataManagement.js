@@ -12,7 +12,7 @@ import {
 } from "./storage.js";
 import { openSheet } from "./sheet.js";
 import { shareOrDownload, shareFilesOrDownload, filenameFor } from "./share.js";
-import { buildDayImageCards, exportEntryAsImage, collectVoiceFiles } from "./canvasExport.js";
+import { buildDayImageCards, buildEntryImageCards, collectVoiceFiles } from "./canvasExport.js";
 import { openImagePickerSheet } from "./imagePicker.js";
 import { promptSummaryFor } from "./dayDetail.js";
 import { formatDate } from "./util.js";
@@ -217,7 +217,8 @@ export async function openEntryShareSheet(entry, dateKey) {
 
   el.querySelector("#day-share-image-btn").addEventListener("click", async () => {
     sheet.close();
-    await exportEntryAsImage(entry, dateKey);
+    const cards = await buildEntryImageCards(entry, dateKey);
+    await shareOrPickImages(cards);
   });
   el.querySelector("#day-share-pdf-btn").addEventListener("click", () => {
     sheet.close();

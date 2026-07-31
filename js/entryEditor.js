@@ -213,12 +213,30 @@ export function openEntryEditor({ entry, isNew, refresh }) {
   el.querySelector("#entry-editor-camera-btn").addEventListener("click", () => cameraInput.click());
   el.querySelector("#entry-editor-library-btn").addEventListener("click", () => libraryInput.click());
 
+  const saveErrorEl = el.querySelector("#entry-editor-save-error");
+
+  // A share card's gallery grid only fits 4 photos per card (see
+  // canvasExport.js's GALLERY_CARD_CHUNK), so a gallery this size splits
+  // into 3 cards to share -- comfortably enough for a day's worth of
+  // photos without an unbounded gallery turning into a dozen share cards.
+  const MAX_GALLERY_IMAGES = 12;
+
   async function addImages(files) {
     if (!files || files.length === 0) return;
     try {
       if (draft.type === "gallery") {
-        const resized = await readAndResizeImages(files, GALLERY_MAX_DIMENSION);
-        draft.images.push(...resized);
+        const remaining = MAX_GALLERY_IMAGES - draft.images.length;
+        const toAdd = Array.from(files).slice(0, Math.max(0, remaining));
+        if (toAdd.length > 0) {
+          const resized = await readAndResizeImages(toAdd, GALLERY_MAX_DIMENSION);
+          draft.images.push(...resized);
+        }
+        if (toAdd.length < files.length) {
+          saveErrorEl.textContent = `Galleries are capped at ${MAX_GALLERY_IMAGES} photos — ${toAdd.length > 0 ? `only added ${toAdd.length} more` : "this one's already full"}.`;
+          saveErrorEl.classList.remove("hidden");
+        } else {
+          saveErrorEl.classList.add("hidden");
+        }
       } else {
         draft.images = [await readAndResizeImage(files[0])];
       }
@@ -231,8 +249,6 @@ export function openEntryEditor({ entry, isNew, refresh }) {
   libraryInput.addEventListener("change", () => addImages(libraryInput.files));
 
   renderFields();
-
-  const saveErrorEl = el.querySelector("#entry-editor-save-error");
   el.querySelector("#entry-editor-save-btn").addEventListener("click", async () => {
     if (activeRecorder) await finishRecording();
     const finalText = (draft.text || "").trim();

@@ -92,13 +92,17 @@ function quoteFontSize(text) {
 // Every content block is built the same way regardless of type: measure
 // first (so its height is known), return { height, draw(startY, centerX) }.
 // That lets the caller vertically center whatever comes back without each
-// branch having to duplicate the centering math.
-async function buildContentBlock(ctx, entry) {
+// branch having to duplicate the centering math. `galleryImages`, when
+// given, is the specific slice of a Gallery entry's photos this particular
+// card should show -- see buildEntryImageCards, which splits a gallery
+// bigger than one card can hold into several cards instead of silently
+// dropping everything past the first 4.
+async function buildContentBlock(ctx, entry, galleryImages) {
   if ((entry.type === "image" || entry.type === "note" || entry.type === "story" || entry.type === "poem") && entry.images?.[0]) {
     return buildImageBlock(ctx, entry, [entry.images[0]]);
   }
   if (entry.type === "gallery" && entry.images?.length) {
-    return buildImageBlock(ctx, entry, entry.images.slice(0, 4));
+    return buildImageBlock(ctx, entry, galleryImages || entry.images.slice(0, 4));
   }
   if (entry.type === "link" && entry.url) {
     return buildLinkBlock(ctx, entry);
@@ -269,8 +273,10 @@ function drawCaption(ctx, lines, startY, centerX, lineHeight) {
 
 // Renders one piece as a shareable 1080x1350 card: the day's prompt for
 // context up top, that piece's own content centered in the middle, a small
-// footer at the bottom. Drawn with the Canvas 2D API alone.
-export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
+// footer at the bottom. Drawn with the Canvas 2D API alone. `galleryImages`
+// (see buildContentBlock) lets a caller render just one chunk of a larger
+// Gallery entry's photos onto this card.
+export async function renderEntryImageCard(entry, { dateKey, dayNumber, galleryImages }) {
   const { category, headline, prompt } = promptSummaryFor(dateKey);
 
   const canvas = document.createElement("canvas");
@@ -320,7 +326,7 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
   const contentBottom = CARD_H - 170;
   const contentHeight = contentBottom - contentTop;
 
-  const block = await buildContentBlock(ctx, entry);
+  const block = await buildContentBlock(ctx, entry, galleryImages);
   const startY = contentTop + Math.max(0, (contentHeight - block.height) / 2);
   block.draw(Math.min(startY, Math.max(contentTop, contentBottom - block.height)), centerX);
 
@@ -353,8 +359,8 @@ export async function collectVoiceFiles(entries, dateKey) {
   return files;
 }
 
-async function buildEntryImageFiles(entry, dateKey, dayNumber, suffix = "") {
-  const canvas = await renderEntryImageCard(entry, { dateKey, dayNumber });
+async function buildEntryImageFiles(entry, dateKey, dayNumber, suffix = "", galleryImages) {
+  const canvas = await renderEntryImageCard(entry, { dateKey, dayNumber, galleryImages });
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   const pngFile = new File([blob], filenameFor(`creative-daily-${dateKey}${suffix}`, "png"), { type: "image/png" });
   const files = [pngFile];
@@ -369,13 +375,34 @@ async function buildEntryImageFiles(entry, dateKey, dayNumber, suffix = "") {
   return { pngDataUrl: canvas.toDataURL("image/png"), files };
 }
 
-// Renders just one piece and shares/downloads it directly -- used for a
-// single entry's own share sheet, where there's only ever one image to hand
-// over, so no picker is needed.
-export async function exportEntryAsImage(entry, dateKey) {
+// A share card's gallery grid only has room for 4 photos -- a bigger
+// Gallery entry used to just silently drop everything past the first 4.
+// Instead, split it into as many 4-photo cards as it takes and let
+// shareOrPickImages (dataManagement.js) offer them the same way a day with
+// several pieces already offers its cards: pick which ones you want.
+const GALLERY_CARD_CHUNK = 4;
+
+// Renders one piece's card(s): a single card for anything that isn't an
+// oversized Gallery, or one card per 4-photo chunk for a Gallery bigger
+// than that. Either way, the caller decides whether to share directly (one
+// card) or open the picker (more than one) -- see shareOrPickImages.
+export async function buildEntryImageCards(entry, dateKey) {
   const dayNumber = await getDayNumber(dateKey);
-  const { files } = await buildEntryImageFiles(entry, dateKey, dayNumber);
-  return shareFilesOrDownload(files);
+  if (entry.type !== "gallery" || !entry.images || entry.images.length <= GALLERY_CARD_CHUNK) {
+    const { pngDataUrl, files } = await buildEntryImageFiles(entry, dateKey, dayNumber);
+    return [{ id: entry.id, dataUrl: pngDataUrl, files }];
+  }
+
+  const chunks = [];
+  for (let i = 0; i < entry.images.length; i += GALLERY_CARD_CHUNK) {
+    chunks.push(entry.images.slice(i, i + GALLERY_CARD_CHUNK));
+  }
+  return Promise.all(
+    chunks.map(async (chunk, i) => {
+      const { pngDataUrl, files } = await buildEntryImageFiles(entry, dateKey, dayNumber, `-${i + 1}`, chunk);
+      return { id: `${entry.id}-${i + 1}`, dataUrl: pngDataUrl, files };
+    })
+  );
 }
 
 // Renders every piece logged that day as its own card. A single-piece day
