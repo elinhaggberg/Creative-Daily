@@ -13,6 +13,7 @@ export const CHANGELOG = [
       "Fixed a bug where one broken piece could wipe an entire day from view: adding a piece with unexpected data could make every piece logged that day (not just the new one) silently vanish, and stay gone even after reloading, since the same bad data reloaded every time. A broken piece is now isolated to its own \"couldn't display this piece\" card, with everything else logged that day rendering normally, and Delete still works on it so it's recoverable.",
       "Added a loading indicator for when a day's pieces take a moment to appear (e.g. a gallery with several full-size photos) instead of the space just looking empty while they load in.",
       "Newly added photos now save smaller: 1280px instead of 1400px for a single photo, and a new, smaller 1024px cap specifically for Gallery, since several photos' decode time all stack up in one render pass there. Roughly a third the file size per Gallery photo, for faster loading with no visible loss of quality. Photos already saved aren't affected.",
+      "Added a small \"Updated to the latest version\" confirmation that appears once, right after the app updates itself in the background — so an update is actually visible instead of just quietly taking effect with nothing to confirm it landed.",
     ],
   },
   {
