@@ -39,7 +39,7 @@ const GUIDES = [
       {
         heading: "Collect, then remix",
         paragraphs: [
-          "Austin Kleon's Steal Like an Artist makes the case that nothing is wholly original — every artist you love is a remix of the artists they loved. So gather influences shamelessly: save lines, images, and ideas that stop you. My Log works well as that collection.",
+          "Austin Kleon's Steal Like an Artist makes the case that nothing is wholly original — every artist you love is a remix of the artists they loved. So gather influences shamelessly: save lines, images, and ideas that stop you. <a href=\"https://myindex.makeitlocal.app\" target=\"_blank\" rel=\"noopener\">My Index</a>, a companion app built exactly for this, works well as that collection.",
         ],
       },
       {
@@ -339,7 +339,10 @@ function openGuideDetail(guide) {
     sec.appendChild(h);
     for (const text of section.paragraphs) {
       const p = document.createElement("p");
-      p.textContent = text;
+      // Paragraphs are static, hand-authored strings (never user input), so
+      // the occasional inline link -- e.g. pointing to a companion app --
+      // can use real HTML instead of forcing every guide into plain text.
+      p.innerHTML = text;
       sec.appendChild(p);
     }
     body.appendChild(sec);
