@@ -1,6 +1,7 @@
 import { openSheet } from "./sheet.js";
 import { getTheme, setTheme, PLAYFUL_SWATCHES } from "./theme.js";
 import { openDataManagementSheet, openImportSheet } from "./dataManagement.js";
+import { openGuidesSheet } from "./guides.js";
 
 export function openSettingsMenu(refresh) {
   const sheet = openSheet("tpl-settings-menu");
@@ -14,6 +15,10 @@ export function openSettingsMenu(refresh) {
   el.querySelector("#instructions-btn").addEventListener("click", () => {
     sheet.close();
     openInstructions();
+  });
+  el.querySelector("#guides-btn").addEventListener("click", () => {
+    sheet.close();
+    openGuidesSheet();
   });
   el.querySelector("#customize-btn").addEventListener("click", () => {
     sheet.close();

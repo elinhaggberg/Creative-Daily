@@ -28,6 +28,7 @@ export const CHANGELOG = [
       "Fixed date fields (Export & manage data, and the Log filter) still overflowing their box on iOS after that: a native date picker doesn't reliably shrink to a percentage width there, so each one is now held to an exact size instead of being left to size itself.",
       "Grew the daily prompt library from 52 to 170 (a bit over 5.5 months before any prompt repeats, up from under 2). Also diversified it well beyond the original mostly-Western, mostly-male, mostly-somber default, and fixed two artwork entries that had quietly violated the app's own public-domain rule.",
       "Grew the prompt library again, 170 to 365 — a full year before any prompt repeats. Filled in more of art history (Renaissance and Baroque masters, more women painters long left out of the story) alongside further reach into Khmer, Korean, Ethiopian, Andean, Persian, and Mughal artwork; Russian, French, Spanish, Chinese, and Arabic literature in public-domain translation; and Cuban, Brazilian, Jamaican, American blues/jazz, and Balkan music.",
+      "New in the menu: Guides — seven short starter guides (a daily creative practice, drawing, poetry, short stories, photography, film, and mixed media) for when a practice feels tempting but hard to start. Each one distills the field's conventional wisdom, ends with a start-today assignment, and links a few widely loved books and channels.",
     ],
   },
 ];

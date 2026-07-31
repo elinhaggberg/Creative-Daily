@@ -221,6 +221,17 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .log-headline-row .card-detail-section-label { margin: 0; }
 
 /* Instructions / What's new */
+/* Guides */
+.guides-intro { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; margin: 0 0 6px; }
+.guide-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.guide-item-title { font-size: 1rem; font-weight: 600; }
+.guide-item-tagline { font-size: 0.82rem; font-weight: 400; color: var(--text-dim); }
+.guide-item-chevron { width: 0.9em; height: 0.9em; color: var(--text-dim); flex-shrink: 0; }
+.guide-resources { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.guide-resource { display: flex; flex-direction: column; gap: 2px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 14px; text-decoration: none; background: var(--surface-2); }
+.guide-resource-title { color: var(--accent); font-weight: 600; font-size: 0.92rem; }
+.guide-resource-note { color: var(--text-dim); font-size: 0.8rem; line-height: 1.4; }
+
 .instructions-body { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
 .instructions-body section h3 { font-size: 1.05rem; margin-bottom: 4px; }
 .instructions-body section p { margin: 0; color: var(--text-dim); font-size: 0.92rem; line-height: 1.5; }

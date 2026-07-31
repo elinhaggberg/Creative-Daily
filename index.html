@@ -274,6 +274,10 @@
       <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><circle cx="256" cy="256" r="216" fill="none" stroke="currentColor" stroke-width="40" /><circle cx="256" cy="176" r="28" /><rect x="228" y="232" width="56" height="180" rx="12" /></svg>
       <span>Instructions</span>
     </button>
+    <button type="button" class="menu-item" id="guides-btn">
+      <svg class="icon icon-line" viewBox="0 0 24 24" aria-hidden="true" focusable="false" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Guides</span>
+    </button>
     <button type="button" class="menu-item" id="customize-btn">
       <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect x="32" y="86" width="448" height="32" rx="16" /><circle cx="176" cy="102" r="40" /><rect x="32" y="240" width="448" height="32" rx="16" /><circle cx="336" cy="256" r="40" /><rect x="32" y="394" width="448" height="32" rx="16" /><circle cx="256" cy="410" r="40" /></svg>
       <span>Customize</span>
@@ -336,6 +340,28 @@
       <button type="button" class="text-btn danger" id="data-clear-btn" disabled>Clear photos &amp; recordings</button>
     </div>
     <p class="import-message hidden" id="data-clear-result"></p>
+  </div>
+</template>
+
+<!-- ===== Guides ===== -->
+<template id="tpl-guides">
+  <div class="sheet">
+    <header class="sheet-header">
+      <h2>Guides</h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <p class="guides-intro">Simple AI-generated guides to get you started — for when a practice feels tempting but you're not sure where to begin. The advice is each field's conventional wisdom; the books and channels linked are widely loved, human-made resources.</p>
+    <div id="guides-list"></div>
+  </div>
+</template>
+
+<template id="tpl-guide-detail">
+  <div class="sheet instructions-sheet">
+    <header class="sheet-header">
+      <h2 id="guide-detail-title"></h2>
+      <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+    </header>
+    <div class="instructions-body" id="guide-detail-body"></div>
   </div>
 </template>
 
