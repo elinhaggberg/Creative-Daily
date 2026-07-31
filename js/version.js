@@ -2,9 +2,16 @@
 // release — whatsNew.js compares this against what a returning visitor last
 // saw. Keep the version string in YYYY.MM.DD form (zero-padded) so plain
 // string comparison sorts the same as chronological order.
-export const APP_VERSION = "2026.07.31.1";
+export const APP_VERSION = "2026.07.31.2";
 
 export const CHANGELOG = [
+  {
+    version: "2026.07.31.2",
+    date: "July 31, 2026",
+    changes: [
+      "Fixed a day's pieces re-loading (with the loading spinner) every single time you opened Home or that day, even for photos you'd already viewed seconds earlier. The app now remembers what it's already decoded for as long as it stays open, so only the very first look at a gallery pays the loading wait — every visit after that is instant.",
+    ],
+  },
   {
     version: "2026.07.31.1",
     date: "July 31, 2026",

@@ -6,10 +6,21 @@ import { buildFallbackCard } from "./entryCard.js";
 // never place it at all.
 const DECODE_TIMEOUT_MS = 4000;
 
+// Every navigation (Home <-> My Log <-> Calendar, or just reopening a day)
+// rebuilds that view's DOM from scratch, including brand-new <img> elements
+// for photos that were already decoded a moment ago -- without remembering
+// that, the same gallery pays the same decode wait every single time you
+// look at it, not just the first. Data: URIs are stable strings, so a
+// module-level cache of "this exact source has decoded successfully
+// before" (kept for the page's lifetime, not persisted) is a safe way to
+// skip straight to painting on every visit after the first.
+const decodedSrcCache = new Set();
+
 function decodeWithTimeout(img) {
   if (!img.decode) return Promise.resolve();
+  if (decodedSrcCache.has(img.src)) return Promise.resolve();
   return Promise.race([
-    img.decode().catch(() => {}),
+    img.decode().then(() => decodedSrcCache.add(img.src)).catch(() => {}),
     new Promise((resolve) => setTimeout(resolve, DECODE_TIMEOUT_MS)),
   ]);
 }
