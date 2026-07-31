@@ -451,6 +451,17 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .entry-columns { display: flex; align-items: flex-start; gap: 14px; }
 .entry-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 
+.entry-loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 48px 16px; color: var(--text-dim); font-size: 0.9rem; }
+.entry-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: entry-loading-spin 0.7s linear infinite;
+}
+@keyframes entry-loading-spin { to { transform: rotate(360deg); } }
+
 .entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; text-align: left; width: 100%; }
 :root[data-theme="playful"] .entry-card { background: var(--card-tint); border-color: color-mix(in srgb, var(--bg) 85%, black); }
 .entry-card-strip { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: color-mix(in srgb, var(--accent) 14%, transparent); }

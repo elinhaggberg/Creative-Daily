@@ -14,6 +14,19 @@ function decodeWithTimeout(img) {
   ]);
 }
 
+// Only shown if building/decoding takes a moment -- e.g. several full-size
+// gallery photos decoding on a slower device -- so a normal, fast, no-photo
+// day never flashes a spinner it didn't need. Without this, that gap reads
+// as "did my piece just disappear?" instead of "it's loading."
+const LOADING_INDICATOR_DELAY_MS = 200;
+
+function buildLoadingIndicator() {
+  const wrap = document.createElement("div");
+  wrap.className = "entry-loading";
+  wrap.innerHTML = `<span class="entry-loading-spinner"></span><span>Loading…</span>`;
+  return wrap;
+}
+
 // Renders a day's entries the way the app describes itself: the first piece
 // logged is a full-width card by itself; from the second piece on, cards
 // bin-pack into two columns (always adding to whichever column is
@@ -28,6 +41,11 @@ export async function renderDayEntries(container, entries, createNode, onOpen) {
     container.replaceChildren();
     return;
   }
+
+  const loadingTimer = setTimeout(() => {
+    container.className = "";
+    container.replaceChildren(buildLoadingIndicator());
+  }, LOADING_INDICATOR_DELAY_MS);
 
   // One malformed/corrupted entry throwing here used to take the entire
   // day's list down with it -- every card was built in a single .map(), so
@@ -57,6 +75,7 @@ export async function renderDayEntries(container, entries, createNode, onOpen) {
   // else) means every card already has its final height the moment it's
   // measured.
   await Promise.all(nodes.flatMap((node) => Array.from(node.querySelectorAll("img")).map(decodeWithTimeout)));
+  clearTimeout(loadingTimer);
 
   if (nodes.length === 1) {
     container.className = "entry-stack";
