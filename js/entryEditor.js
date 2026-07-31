@@ -1,6 +1,6 @@
 import { saveEntry } from "./storage.js";
 import { openSheet } from "./sheet.js";
-import { readAndResizeImage, readAndResizeImages } from "./imageBlob.js";
+import { readAndResizeImage, readAndResizeImages, GALLERY_MAX_DIMENSION } from "./imageBlob.js";
 import { startRecording, blobToDataUrl, RECORDING_SUPPORTED } from "./voiceRecorder.js";
 import { ENTRY_TYPES, typeFor } from "./entryTypes.js";
 
@@ -217,7 +217,7 @@ export function openEntryEditor({ entry, isNew, refresh }) {
     if (!files || files.length === 0) return;
     try {
       if (draft.type === "gallery") {
-        const resized = await readAndResizeImages(files);
+        const resized = await readAndResizeImages(files, GALLERY_MAX_DIMENSION);
         draft.images.push(...resized);
       } else {
         draft.images = [await readAndResizeImage(files[0])];
