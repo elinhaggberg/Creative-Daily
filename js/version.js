@@ -27,6 +27,7 @@ export const CHANGELOG = [
       "Fixed the real cause of Export & manage data feeling draggable in every direction: the From/To date row could render wider than the sheet on iOS, which quietly made the whole sheet horizontally scrollable too, so a normal vertical scroll gesture could drag the content sideways as well as up and down.",
       "Fixed date fields (Export & manage data, and the Log filter) still overflowing their box on iOS after that: a native date picker doesn't reliably shrink to a percentage width there, so each one is now held to an exact size instead of being left to size itself.",
       "Grew the daily prompt library from 52 to 170 (a bit over 5.5 months before any prompt repeats, up from under 2). Also diversified it well beyond the original mostly-Western, mostly-male, mostly-somber default, and fixed two artwork entries that had quietly violated the app's own public-domain rule.",
+      "Grew the prompt library again, 170 to 365 — a full year before any prompt repeats. Filled in more of art history (Renaissance and Baroque masters, more women painters long left out of the story) alongside further reach into Khmer, Korean, Ethiopian, Andean, Persian, and Mughal artwork; Russian, French, Spanish, Chinese, and Arabic literature in public-domain translation; and Cuban, Brazilian, Jamaican, American blues/jazz, and Balkan music.",
     ],
   },
 ];
