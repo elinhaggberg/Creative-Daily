@@ -31,6 +31,8 @@ export const CHANGELOG = [
       "New in the menu: Guides — seven short starter guides (a daily creative practice, drawing, poetry, short stories, photography, film, and mixed media) for when a practice feels tempting but hard to start. Each one distills the field's conventional wisdom, ends with a start-today assignment, and links a few widely loved books and channels.",
       "Redesigned the image share card: the daily prompt is now a small \"Today's prompt\" line at the top instead of a big headline, so the piece you actually made gets the card.",
       "Tweaked the share card again: the prompt line is now centered at the top, and the Day number and date moved down to the footer, replacing the piece-type label that used to sit there.",
+      "Mentioned Guides in the \"How this app works\" popup and the full Instructions, so it's discoverable from day one instead of only by browsing the menu.",
+      "On the share card, the prompt type now sits on its own line above the headline instead of crowding in beside it.",
     ],
   },
 ];

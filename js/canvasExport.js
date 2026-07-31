@@ -286,32 +286,27 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
   // A compact header -- the prompt is context, not the headline act, so it
   // stays small and out of the way, leaving the piece itself the bulk of
   // the card (see the CONTENT_H comment below for how that space is split).
+  // The prompt type sits on its own line above the headline, rather than
+  // crowding in beside it, for a cleaner stack: label, type, headline.
   const centerX = CARD_W / 2;
   let y = 90;
   ctx.textAlign = "center";
   ctx.fillStyle = TEXT_DIM;
   ctx.font = `700 24px ${SANS}`;
   ctx.fillText("TODAY'S PROMPT", centerX, y);
-  y += 44;
+  y += 40;
 
-  ctx.font = `700 24px ${SANS}`;
-  const catLabelW = ctx.measureText(category.label.toUpperCase()).width;
-  const catGap = 20;
+  ctx.fillStyle = accent;
+  ctx.font = `700 22px ${SANS}`;
+  ctx.fillText(category.label.toUpperCase(), centerX, y);
+  y += 40;
+
   const headlineFont = `36px ${SERIF}`;
   ctx.font = headlineFont;
-  const headlineMaxW = CONTENT_W - catLabelW - catGap;
-  const headlineText = truncateToWidth(ctx, headline, headlineMaxW);
-  const headlineW = ctx.measureText(headlineText).width;
-
-  const groupW = catLabelW + catGap + headlineW;
-  const groupX = centerX - groupW / 2;
-  ctx.textAlign = "left";
-  ctx.fillStyle = accent;
-  ctx.font = `700 24px ${SANS}`;
-  ctx.fillText(category.label.toUpperCase(), groupX, y);
+  const headlineText = truncateToWidth(ctx, headline, CONTENT_W);
   ctx.fillStyle = TEXT;
-  ctx.font = headlineFont;
-  ctx.fillText(headlineText, groupX + catLabelW + catGap, y);
+  ctx.fillText(headlineText, centerX, y);
+  ctx.textAlign = "left";
   y += 38;
 
   ctx.strokeStyle = BORDER;
