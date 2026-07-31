@@ -57,6 +57,18 @@ function wrapText(ctx, text, maxWidth) {
   return lines;
 }
 
+function truncateToWidth(ctx, text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let lo = 0;
+  let hi = text.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (ctx.measureText(`${text.slice(0, mid)}…`).width <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return `${text.slice(0, lo).trimEnd()}…`;
+}
+
 function roundedRectPath(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -272,43 +284,40 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber }) {
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  let y = 108;
+  // A compact header -- the prompt is context, not the headline act, so it
+  // stays small and out of the way, leaving the piece itself the bulk of
+  // the card (see the CONTENT_H comment below for how that space is split).
+  let y = 90;
   ctx.fillStyle = TEXT_DIM;
-  ctx.font = `italic 30px ${SERIF}`;
-  ctx.fillText(`Day ${dayNumber} · ${formatPromptDate(dateKey)}`, PAD, y);
-  y += 54;
+  ctx.font = `700 24px ${SANS}`;
+  ctx.fillText("TODAY'S PROMPT", PAD, y);
+  ctx.textAlign = "right";
+  ctx.font = `26px ${SERIF}`;
+  ctx.fillText(`Day ${dayNumber} · ${formatPromptDate(dateKey)}`, CARD_W - PAD, y);
+  ctx.textAlign = "left";
+  y += 44;
 
   ctx.font = `700 24px ${SANS}`;
-  const label = category.label.toUpperCase();
-  const labelW = ctx.measureText(label).width;
-  const badgePadX = 20;
-  const badgeH = 48;
-  ctx.globalAlpha = 0.18;
-  ctx.fillStyle = accent;
-  roundedRectPath(ctx, PAD, y, labelW + badgePadX * 2, badgeH, badgeH / 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = accent;
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, PAD + badgePadX, y + badgeH / 2 + 2);
-  ctx.textBaseline = "alphabetic";
-  y += badgeH + 34;
+  const catLabelW = ctx.measureText(category.label.toUpperCase()).width;
+  const headlineFont = `36px ${SERIF}`;
+  ctx.font = headlineFont;
+  const headlineMaxW = CONTENT_W - catLabelW - 20;
+  const headlineText = truncateToWidth(ctx, headline, headlineMaxW);
 
+  ctx.fillStyle = accent;
+  ctx.font = `700 24px ${SANS}`;
+  ctx.fillText(category.label.toUpperCase(), PAD, y);
   ctx.fillStyle = TEXT;
-  ctx.font = `700 52px ${SERIF}`;
-  const titleLines = wrapText(ctx, headline, CONTENT_W).slice(0, 2);
-  for (const line of titleLines) {
-    y += 58;
-    ctx.fillText(line, PAD, y);
-  }
-  y += 36;
+  ctx.font = headlineFont;
+  ctx.fillText(headlineText, PAD + catLabelW + 20, y);
+  y += 38;
 
   ctx.strokeStyle = BORDER;
   ctx.beginPath();
   ctx.moveTo(PAD, y);
   ctx.lineTo(CARD_W - PAD, y);
   ctx.stroke();
-  y += 50;
+  y += 44;
 
   const contentTop = y;
   const contentBottom = CARD_H - 170;
