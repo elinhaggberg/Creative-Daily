@@ -102,9 +102,8 @@ export async function renderEntryNodesInto(container, entries, refresh) {
     container.replaceChildren();
     return;
   }
-  await renderDayEntries(container, entries, (entry) =>
-    createEntryNode(entry, (e) => openEntryDetail(e, { refresh }))
-  );
+  const onOpen = (e) => openEntryDetail(e, { refresh });
+  await renderDayEntries(container, entries, (entry) => createEntryNode(entry, onOpen), onOpen);
 }
 
 // Fetches and renders a day's entries (masonry) into `container`. Used by

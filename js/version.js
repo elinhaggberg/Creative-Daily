@@ -10,6 +10,7 @@ export const CHANGELOG = [
     date: "July 31, 2026",
     changes: [
       "Added an App Library link in the gear menu, pointing to the Make it Local App Library of sibling apps.",
+      "Fixed a bug where one broken piece could wipe an entire day from view: adding a piece with unexpected data could make every piece logged that day (not just the new one) silently vanish, and stay gone even after reloading, since the same bad data reloaded every time. A broken piece is now isolated to its own \"couldn't display this piece\" card, with everything else logged that day rendering normally, and Delete still works on it so it's recoverable.",
     ],
   },
   {

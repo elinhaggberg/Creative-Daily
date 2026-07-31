@@ -17,12 +17,25 @@ export function openEntryDetail(entry, { refresh }) {
   const durationSuffix = entry.type === "voice" && entry.audio ? ` · ${formatDuration(entry.audioDuration)}` : "";
   el.querySelector("#entry-detail-badge").innerHTML = `${type.icon}<span>${type.label}${durationSuffix}</span>`;
 
-  const mediaSlot = el.querySelector("#entry-detail-media");
-  const media = buildEntryMedia(entry, { full: true });
-  mediaSlot.replaceChildren(...(media ? [media] : []));
+  // If this entry's data is malformed in a way that breaks rendering, still
+  // wire up Edit/Share/Delete below rather than leaving a half-built sheet
+  // with no working buttons -- Delete in particular is the only real way to
+  // recover from a genuinely corrupted piece.
+  try {
+    const mediaSlot = el.querySelector("#entry-detail-media");
+    const media = buildEntryMedia(entry, { full: true });
+    mediaSlot.replaceChildren(...(media ? [media] : []));
 
-  const bodySlot = el.querySelector("#entry-detail-body");
-  bodySlot.replaceChildren(...buildEntryBody(entry));
+    const bodySlot = el.querySelector("#entry-detail-body");
+    bodySlot.replaceChildren(...buildEntryBody(entry));
+  } catch (err) {
+    console.error("Failed to render entry detail", entry?.id, err);
+    const bodySlot = el.querySelector("#entry-detail-body");
+    const msg = document.createElement("p");
+    msg.className = "entry-card-text";
+    msg.textContent = "Couldn't display this piece. You can still delete it below.";
+    bodySlot.replaceChildren(msg);
+  }
 
   el.querySelector("#entry-detail-edit-btn").addEventListener("click", () => {
     sheet.close();

@@ -92,6 +92,25 @@ export function buildEntryBody(entry) {
   return nodes;
 }
 
+// A safe stand-in for a piece that failed to render -- used when
+// createEntryNode throws, so one malformed/corrupted entry shows up as one
+// broken card instead of silently taking the whole day's list down with it
+// (masonry.js builds every card in the same batch before any of them paint).
+export function buildFallbackCard(entry) {
+  const article = document.createElement("article");
+  article.className = "entry-card";
+  const type = typeFor(entry?.type) || { icon: "", label: "Piece" };
+  const strip = document.createElement("div");
+  strip.className = "entry-card-strip";
+  strip.innerHTML = `<span class="entry-card-type-icon">${type.icon || ""}</span><span class="entry-card-type-label">${type.label || "Piece"}</span>`;
+  article.appendChild(strip);
+  const placeholder = document.createElement("div");
+  placeholder.className = "entry-card-cleared";
+  placeholder.innerHTML = `${ICON_IMAGE}<span>Couldn't display this piece</span>`;
+  article.appendChild(placeholder);
+  return article;
+}
+
 // Builds one entry card for the day view (Home's "today" and My Log's day
 // detail). `onOpen` is called with the entry when the card itself is
 // tapped -- opens the read-only detail preview, not the editor directly.

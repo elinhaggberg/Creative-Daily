@@ -1,15 +1,50 @@
+import { buildFallbackCard } from "./entryCard.js";
+
+// A hung decode (a truly huge image, or a browser that never settles the
+// promise for some data: URIs) must not be able to block the whole day's
+// render forever -- better to place a card by its best-known height than to
+// never place it at all.
+const DECODE_TIMEOUT_MS = 4000;
+
+function decodeWithTimeout(img) {
+  if (!img.decode) return Promise.resolve();
+  return Promise.race([
+    img.decode().catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, DECODE_TIMEOUT_MS)),
+  ]);
+}
+
 // Renders a day's entries the way the app describes itself: the first piece
 // logged is a full-width card by itself; from the second piece on, cards
 // bin-pack into two columns (always adding to whichever column is
 // currently shorter), so it reads as real masonry rather than a rigid grid.
-export async function renderDayEntries(container, entries, createNode) {
+// `onOpen`, if given, makes a fallback (broken-entry) card tappable too --
+// its own detail sheet is hardened to still offer Delete even when it can't
+// render the piece either, which is the only real way to recover from a
+// genuinely corrupted entry.
+export async function renderDayEntries(container, entries, createNode, onOpen) {
   if (entries.length === 0) {
     container.className = "";
     container.replaceChildren();
     return;
   }
 
-  const nodes = entries.map((entry) => createNode(entry));
+  // One malformed/corrupted entry throwing here used to take the entire
+  // day's list down with it -- every card was built in a single .map(), so
+  // one exception meant none of them ever rendered (and since the bad entry
+  // stays in storage, the same crash repeated on every reload). Isolate
+  // each card's build so a broken piece becomes one broken-looking card
+  // instead of silently erasing every piece logged that day.
+  const nodes = entries.map((entry) => {
+    try {
+      return createNode(entry);
+    } catch (err) {
+      console.error("Failed to render entry", entry?.id, err);
+      const card = buildFallbackCard(entry);
+      if (onOpen) card.addEventListener("click", () => onOpen(entry));
+      return card;
+    }
+  });
 
   // The bin-packing below decides where a card goes by reading the real
   // rendered height of each column right after appending it -- which only
@@ -21,11 +56,7 @@ export async function renderDayEntries(container, entries, createNode) {
   // image up front (off-DOM, so this doesn't block first paint of anything
   // else) means every card already has its final height the moment it's
   // measured.
-  await Promise.all(
-    nodes.flatMap((node) =>
-      Array.from(node.querySelectorAll("img")).map((img) => (img.decode ? img.decode().catch(() => {}) : null))
-    )
-  );
+  await Promise.all(nodes.flatMap((node) => Array.from(node.querySelectorAll("img")).map(decodeWithTimeout)));
 
   if (nodes.length === 1) {
     container.className = "entry-stack";
