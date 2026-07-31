@@ -25,6 +25,7 @@ export const CHANGELOG = [
       "Fixed text overlapping and layout jumping around on longer sheets (like Export & manage data): the sheet no longer uses flex layout at all (it never needed to), which was letting content get squeezed shorter than it needed before scrolling kicked in.",
       "Fixed a second, separate cause of the same page shifting under your finger: the storage-used line started blank and only got its real text once a background read of your stored photos finished, silently pushing everything below it down mid-scroll. It now reserves its place immediately.",
       "Fixed the real cause of Export & manage data feeling draggable in every direction: the From/To date row could render wider than the sheet on iOS, which quietly made the whole sheet horizontally scrollable too, so a normal vertical scroll gesture could drag the content sideways as well as up and down.",
+      "Fixed date fields (Export & manage data, and the Log filter) still overflowing their box on iOS after that: a native date picker doesn't reliably shrink to a percentage width there, so each one is now held to an exact size instead of being left to size itself.",
     ],
   },
 ];

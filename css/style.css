@@ -258,8 +258,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.field span { font-size: 0.85rem; color: var(--text-dim); }
-.field input[type="text"], .field input[type="url"], .field input[type="date"], .field textarea {
+.field > span:not(.date-field) { font-size: 0.85rem; color: var(--text-dim); }
+.field input[type="text"], .field input[type="url"], .field textarea {
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -273,6 +273,36 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 .field textarea.editor-serif { font-family: var(--font-serif); font-size: 1.08rem; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
 .field-row { display: flex; gap: 10px; }
+
+/* A native <input type="date"> doesn't reliably honor a percentage width on
+   iOS -- it can render at its own locale-dependent minimum content width
+   (long month names are worse) regardless of the box CSS gives it, pushing
+   it past the field's edge. Sizing the wrapper explicitly and absolutely
+   positioning the input to fill it exactly forces the input into that box
+   instead of letting its native intrinsic width win. */
+.date-field {
+  position: relative;
+  display: block;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.date-field input[type="date"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+}
+.date-field input[type="date"]:focus { outline: none; }
+.field:focus-within .date-field { border-color: var(--accent); }
 /* Flex items default to min-width: auto, i.e. never shrink below their
    content's own minimum size -- a native <input type="date"> can report a
    sizeable intrinsic minimum on iOS, wide enough that two side by side
@@ -501,6 +531,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; font-family: var(--font-heading); }
 :root[data-theme="playful"] .text-btn,
 :root[data-theme="playful"] .field input,
 :root[data-theme="playful"] .field textarea,
+:root[data-theme="playful"] .date-field,
 :root[data-theme="playful"] .entry-card-link-row {
   border-radius: 14px;
 }
