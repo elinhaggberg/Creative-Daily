@@ -38,34 +38,17 @@ function route() {
 window.addEventListener("hashchange", route);
 route();
 
-// If the previous load's service worker update reloaded the page to apply
-// itself (see below), say so -- otherwise an update is invisible: the app
-// just quietly starts working differently one day, with nothing to confirm
-// a fresh version actually landed on this device.
-const JUST_UPDATED_KEY = "cd_just_updated_v1";
-if (localStorage.getItem(JUST_UPDATED_KEY)) {
-  localStorage.removeItem(JUST_UPDATED_KEY);
-  showUpdatedToast();
-}
-
-function showUpdatedToast() {
-  const toast = document.createElement("div");
-  toast.className = "update-toast";
-  toast.textContent = "Updated to the latest version";
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add("show"));
-  setTimeout(() => {
-    toast.classList.remove("show");
-    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
-  }, 3200);
-}
-
+// A new service worker activates in the background (it already takes over
+// immediately via skipWaiting/clients.claim) but an already-open tab keeps
+// running the JS it loaded at open time regardless -- so it needs a reload
+// to actually pick up the new code. Reloading the instant that happens
+// would yank away whatever's on screen at a moment the update has nothing
+// to do with, so instead it waits until it's safe: right away if the tab
+// is already backgrounded, or the next time it gets backgrounded if it's
+// in front of you right now -- simply fresh again by the time you come
+// back, same as a normal reopen. The actual "you're updated" signal is
+// whatsNew.js's sheet, keyed off APP_VERSION, not this reload itself.
 if ("serviceWorker" in navigator) {
-  // Only a real update should announce itself -- the very first time this
-  // app is ever opened, the controllerchange below fires too (no controller
-  // -> an active one), but there's nothing to call an "update" yet.
-  const hadControllerAtLoad = Boolean(navigator.serviceWorker.controller);
-
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("service-worker.js")
@@ -77,7 +60,6 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (updatePending) return;
     updatePending = true;
-    if (hadControllerAtLoad) localStorage.setItem(JUST_UPDATED_KEY, "1");
     if (document.hidden) {
       window.location.reload();
     } else {
