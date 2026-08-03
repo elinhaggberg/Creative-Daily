@@ -14,6 +14,7 @@ const CARD_W = 1080;
 const CARD_H = 1350;
 const PAD = 90;
 const CONTENT_W = CARD_W - PAD * 2;
+const HEADLINE_MAX_LINES = 3;
 
 const BG = "#f7f0e4";
 const TEXT = "#2b2620";
@@ -307,13 +308,33 @@ export async function renderEntryImageCard(entry, { dateKey, dayNumber, galleryI
   ctx.fillText(category.label.toUpperCase(), centerX, y);
   y += 40;
 
-  const headlineFont = `36px ${SERIF}`;
-  ctx.font = headlineFont;
-  const headlineText = truncateToWidth(ctx, headline, CONTENT_W);
+  // A quoted excerpt (see TEXTS in prompts.js) uses " / " to mark its own
+  // poetic line breaks -- honor those as real line breaks rather than
+  // wrapping wherever the text happens to run out of width, then word-wrap
+  // within that. Capped at a few lines (with an attribution line below, if
+  // this prompt has one) so a long excerpt still can't take over the card
+  // from the piece it's meant to be context for.
+  ctx.font = `36px ${SERIF}`;
+  const wrappedHeadline = wrapText(ctx, headline.split(" / ").join("\n"), CONTENT_W);
+  const headlineLines = wrappedHeadline.slice(0, HEADLINE_MAX_LINES);
+  if (wrappedHeadline.length > HEADLINE_MAX_LINES) {
+    headlineLines[HEADLINE_MAX_LINES - 1] = truncateToWidth(ctx, headlineLines[HEADLINE_MAX_LINES - 1], CONTENT_W);
+  }
   ctx.fillStyle = TEXT;
-  ctx.fillText(headlineText, centerX, y);
+  for (const line of headlineLines) {
+    ctx.fillText(line, centerX, y);
+    y += 42;
+  }
+
+  if (prompt.meta) {
+    ctx.font = `italic 22px ${SANS}`;
+    ctx.fillStyle = TEXT_DIM;
+    ctx.fillText(truncateToWidth(ctx, `— ${prompt.meta}`, CONTENT_W), centerX, y);
+    y += 34;
+  } else {
+    y += 4;
+  }
   ctx.textAlign = "left";
-  y += 38;
 
   ctx.strokeStyle = BORDER;
   ctx.beginPath();
