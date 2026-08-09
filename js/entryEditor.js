@@ -1,8 +1,9 @@
-import { saveEntry } from "./storage.js";
+import { saveEntry, todayKey } from "./storage.js";
 import { openSheet } from "./sheet.js";
 import { readAndResizeImage, readAndResizeImages, GALLERY_MAX_DIMENSION } from "./imageBlob.js";
 import { startRecording, blobToDataUrl, RECORDING_SUPPORTED } from "./voiceRecorder.js";
 import { ENTRY_TYPES, typeFor } from "./entryTypes.js";
+import { buildPromptCard } from "./dayDetail.js";
 
 // Poem and Short story open as a full-screen, distraction-free writing view
 // instead of the compact bottom sheet the other types use -- long-form
@@ -23,6 +24,17 @@ export function openEntryEditor({ entry, isNew, refresh }) {
   const sheetEl = el.querySelector(".sheet");
   el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
   el.querySelector("#entry-editor-heading").textContent = isNew ? "Add to today" : "Edit";
+
+  // Only new entries need the reminder -- an edit is already anchored to a
+  // piece the person made, prompt in hand. This is what carries the
+  // prompt (and its YouTube/image-search link, for music/artwork) into the
+  // Calendar catch-up flow and both "+" add buttons, none of which show it
+  // otherwise.
+  if (isNew) {
+    const promptSlot = el.querySelector("#entry-editor-prompt-slot");
+    const heading = draft.dateKey === todayKey() ? "Today's creative prompt" : "That day's creative prompt";
+    promptSlot.replaceChildren(buildPromptCard(draft.dateKey, { heading }));
+  }
 
   const textInput = el.querySelector("#entry-editor-text");
   function resizeText() {
