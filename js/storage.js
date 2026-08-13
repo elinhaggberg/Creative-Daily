@@ -215,9 +215,10 @@ export async function importData(data) {
   const sanitized = incoming.map(sanitizeEntry).filter(Boolean);
   for (const entry of sanitized) await putOne("entries", entry);
 
-  if (data.type === "creative-daily-backup" && data.theme) setThemePref(data.theme);
+  const preferencesApplied = data.type === "creative-daily-backup" && Boolean(data.theme);
+  if (preferencesApplied) setThemePref(data.theme);
 
-  return { entryCount: sanitized.length };
+  return { entryCount: sanitized.length, preferencesApplied };
 }
 
 // ---- Preferences ----

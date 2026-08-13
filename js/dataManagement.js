@@ -18,6 +18,7 @@ import { promptSummaryFor } from "./dayDetail.js";
 import { formatDate } from "./util.js";
 import { typeFor } from "./entryTypes.js";
 import { formatDuration } from "./entryCard.js";
+import { applyTheme } from "./theme.js";
 import { dataUrlToBlob, fileExtensionForAudio } from "./voiceRecorder.js";
 
 function formatBytes(n) {
@@ -376,9 +377,14 @@ export async function openImportSheet(refresh) {
     }
     try {
       const result = await importData(parsed);
-      messageEl.textContent = result.entryCount
+      let text = result.entryCount
         ? `Imported ${result.entryCount} piece${result.entryCount !== 1 ? "s" : ""}.`
         : "Import complete.";
+      if (result.preferencesApplied) {
+        text += " Restored your theme too.";
+        applyTheme();
+      }
+      messageEl.textContent = text;
       if (refresh) refresh();
       setTimeout(() => sheet.close(), 900);
     } catch (err) {
