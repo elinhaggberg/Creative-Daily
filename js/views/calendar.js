@@ -52,7 +52,13 @@ export function renderCalendar(root, nav) {
   async function draw() {
     const days = await getDaysWithEntries();
     const doneDates = new Set(days.map((d) => d.dateKey));
+    // days is sorted newest-first, so the last entry is the earliest one.
+    // An imported backup can hold entries from well before this device's
+    // first-open timestamp, so the catch-up range starts at whichever of
+    // the two is earlier.
+    const earliestEntryKey = days.length ? days[days.length - 1].dateKey : null;
     const firstOpenKey = toDateKey(new Date(getFirstOpenAt()));
+    const startKey = earliestEntryKey && earliestEntryKey < firstOpenKey ? earliestEntryKey : firstOpenKey;
     const todayKeyValue = todayKey();
 
     const isCurrentMonth = viewState.year === today.getFullYear() && viewState.month === today.getMonth();
@@ -71,7 +77,7 @@ export function renderCalendar(root, nav) {
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDate = new Date(viewState.year, viewState.month, day);
       const dateKey = toDateKey(cellDate);
-      const isBeforeAccount = dateKey < firstOpenKey;
+      const isBeforeStart = dateKey < startKey;
       const isFuture = dateKey > todayKeyValue;
 
       const cell = document.createElement("button");
@@ -91,7 +97,7 @@ export function renderCalendar(root, nav) {
       if (doneDates.has(dateKey)) {
         cell.classList.add("is-done");
         cell.addEventListener("click", () => openDayDetail(dateKey, { onChange: draw }));
-      } else if (isBeforeAccount || isFuture) {
+      } else if (isBeforeStart || isFuture) {
         cell.classList.add("is-blank");
         cell.disabled = true;
       } else if (dateKey === todayKeyValue) {
