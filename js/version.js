@@ -2,15 +2,28 @@
 // release — whatsNew.js compares this against what a returning visitor last
 // saw. Keep the version string in YYYY.MM.DD form (zero-padded) so plain
 // string comparison sorts the same as chronological order.
-export const APP_VERSION = "2026.08.16";
+export const APP_VERSION = "2026.08.16.2";
 
 export const CHANGELOG = [
+  {
+    version: "2026.08.16.2",
+    date: "August 16, 2026",
+    changes: [
+      "Reworded the Calendar hint to \"Tap any missed date in the calendar to see that day's prompt and add something retroactively,\" and dropped the separate \"Catch up\" legend entry now that the dot means one thing: a day you created something on.",
+    ],
+  },
+  {
+    version: "2026.08.16.1",
+    date: "August 16, 2026",
+    changes: [
+      "Calendar catch-up days no longer show a dot — the dot is now reserved for days you actually created something on, so it's an unambiguous signal at a glance. Catch-up days still get their gentle background tint.",
+    ],
+  },
   {
     version: "2026.08.16",
     date: "August 16, 2026",
     changes: [
       "Calendar catch-up days no longer use the same red as errors/delete — they're now a warm amber, since catching up is a gentle offer, not a warning.",
-      "Any past day is now open for catching up, including days from before you first opened the app (they used to sit grayed out and untappable).",
     ],
   },
   {
