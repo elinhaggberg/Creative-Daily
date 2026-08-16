@@ -1,4 +1,4 @@
-import { getDaysWithEntries, toDateKey, getFirstOpenAt, todayKey } from "../storage.js";
+import { getDaysWithEntries, toDateKey, todayKey } from "../storage.js";
 import { openDayDetail, addEntryForDate } from "../dayDetail.js";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -52,7 +52,6 @@ export function renderCalendar(root, nav) {
   async function draw() {
     const days = await getDaysWithEntries();
     const doneDates = new Set(days.map((d) => d.dateKey));
-    const firstOpenKey = toDateKey(new Date(getFirstOpenAt()));
     const todayKeyValue = todayKey();
 
     const isCurrentMonth = viewState.year === today.getFullYear() && viewState.month === today.getMonth();
@@ -71,7 +70,6 @@ export function renderCalendar(root, nav) {
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDate = new Date(viewState.year, viewState.month, day);
       const dateKey = toDateKey(cellDate);
-      const isBeforeAccount = dateKey < firstOpenKey;
       const isFuture = dateKey > todayKeyValue;
 
       const cell = document.createElement("button");
@@ -91,7 +89,7 @@ export function renderCalendar(root, nav) {
       if (doneDates.has(dateKey)) {
         cell.classList.add("is-done");
         cell.addEventListener("click", () => openDayDetail(dateKey, { onChange: draw }));
-      } else if (isBeforeAccount || isFuture) {
+      } else if (isFuture) {
         cell.classList.add("is-blank");
         cell.disabled = true;
       } else if (dateKey === todayKeyValue) {
