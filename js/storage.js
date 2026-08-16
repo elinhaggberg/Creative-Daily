@@ -113,15 +113,19 @@ export async function getDayNumber(asOfKey = todayKey()) {
   return distinctBefore + (hasEntryAsOf ? 0 : 1);
 }
 
-// Past days since first open that have no entry at all — what the Calendar
-// offers to "catch up" on.
+// Past days since you started using the app that have no entry at all —
+// what the Calendar offers to "catch up" on. "Started using the app" is
+// the earlier of the device's first-open timestamp and the earliest entry
+// on record, since an imported backup can predate first-open.
 export async function getMissedDateKeys() {
   const days = await getDaysWithEntries();
   const doneDates = new Set(days.map((d) => d.dateKey));
+  const earliestEntryKey = days.length ? days[days.length - 1].dateKey : null;
   const firstOpenKey = toDateKey(new Date(getFirstOpenAt()));
+  const startKey = earliestEntryKey && earliestEntryKey < firstOpenKey ? earliestEntryKey : firstOpenKey;
   const today = todayKey();
   const missed = [];
-  let cursor = firstOpenKey;
+  let cursor = startKey;
   while (cursor < today) {
     if (!doneDates.has(cursor)) missed.push(cursor);
     cursor = addDays(cursor, 1);

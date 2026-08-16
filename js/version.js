@@ -2,9 +2,16 @@
 // release — whatsNew.js compares this against what a returning visitor last
 // saw. Keep the version string in YYYY.MM.DD form (zero-padded) so plain
 // string comparison sorts the same as chronological order.
-export const APP_VERSION = "2026.08.16.2";
+export const APP_VERSION = "2026.08.16.3";
 
 export const CHANGELOG = [
+  {
+    version: "2026.08.16.3",
+    date: "August 16, 2026",
+    changes: [
+      "Fixed the Calendar's catch-up range being anchored to this device's first-open date even when a restored backup held earlier entries — days you'd actually imported (e.g. from before you reinstalled or switched devices) showed as grayed-out instead of catch-up-able. It now starts from whichever is earlier: first-open, or your earliest logged entry.",
+    ],
+  },
   {
     version: "2026.08.16.2",
     date: "August 16, 2026",
