@@ -1,4 +1,4 @@
-const CACHE_NAME = "creative-daily-v29";
+const CACHE_NAME = "creative-daily-v30";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -36,9 +36,7 @@ const APP_SHELL = [
   "./js/views/log.js",
   "./js/views/calendar.js",
   "./icons/icon-192.png",
-  "./icons/icon-192-dark.png",
   "./icons/icon-512.png",
-  "./icons/icon-512-dark.png",
   "./icons/icon-maskable-512.png",
   "./icons/apple-touch-icon.png",
 ];
