@@ -2,9 +2,16 @@
 // release — whatsNew.js compares this against what a returning visitor last
 // saw. Keep the version string in YYYY.MM.DD form (zero-padded) so plain
 // string comparison sorts the same as chronological order.
-export const APP_VERSION = "2026.08.16.1";
+export const APP_VERSION = "2026.08.16.2";
 
 export const CHANGELOG = [
+  {
+    version: "2026.08.16.2",
+    date: "August 16, 2026",
+    changes: [
+      "Reworded the Calendar hint to \"Tap any missed date in the calendar to see that day's prompt and add something retroactively,\" and dropped the separate \"Catch up\" legend entry now that the dot means one thing: a day you created something on.",
+    ],
+  },
   {
     version: "2026.08.16.1",
     date: "August 16, 2026",
